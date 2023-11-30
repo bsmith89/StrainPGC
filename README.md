@@ -56,8 +56,8 @@ families to the genomes of each of the strains.
 A complete workflow can be divided into four phases:
 
 1. Metagenomic profiling, which includes both:
-    a. SNP profiling for strain tracking
-    b. Pangenome profiling
+    - SNP profiling for strain tracking
+    - Pangenome profiling
 2. Strain tracking / sample partitioning
 3. Running the StrainPGC algorithm
 4. Quality assessment / control
@@ -103,8 +103,10 @@ Strains failing these two checks should be removed from downstream analyses.
 
 Tools are included with StrainPGC for several auxiliary purposes:
 
+- Summarizing statistics about strains and genes (TODO)
 - Identifying species core genes based on a reference genome-by-gene occurrence
-  table.
+  table (TODO)
+- Visualizing the distribution of depth ratios and correlations (TODO)
 - TODO: What else is needed?
 
 ## Citation
