@@ -1,3 +1,5 @@
+from spgc.estimation import partition_gene_content
+from spgc.pandas_util import idxwhere
 import spgc
 import logging
 import argparse
@@ -44,38 +46,43 @@ def parse_cli_args():
         help="TSV mapping samples to strains",
     )
     parser.add_argument(
-        "assignments_outpath",
+        "outpath",
         metavar="OUTPATH",
         help="Where to write strain-by-gene assignments table",
     )
 
-    # Additional outputs
+    # Parameters
     parser.add_argument(
-        "--species-depth-out",
-        dest="species_depth_outpath",
+        "--species-free-thresh",
+        "-f",
         nargs=1,
-        help="Write estimated species depths to file.",
+        type=float,
+        help="Species-free depth threshold.",
+        default=spgc.DEFAULT_SPECIES_FREE_THRESHOLD,
     )
     parser.add_argument(
-        "--species-free-samples-out",
-        dest="species_free_samples_outpath",
+        "--depth-ratio-thresh",
+        "-d",
         nargs=1,
-        help="Write list of samples with very low species depth to file.",
+        type=float,
+        help="Depth ratio selection threshold.",
+        default=spgc.DEFAULT_DEPTH_RATIO_THRESHOLD,
     )
     parser.add_argument(
-        "--depth-ratio-out",
-        dest="depth_ratio_outpath",
+        "--correlation-thresh",
+        "-c",
         nargs=1,
-        help="Write table of gene depth ratios to file.",
-    )
-    parser.add_argument(
-        "--depth-corr-out",
-        dest="depth_correlation_outpath",
-        nargs=1,
-        help="Write table of gene depth correlations to file.",
+        type=float,
+        help="Correlation selection threshold.",
+        default=spgc.DEFAULT_CORRELATION_THRESHOLD,
     )
 
-    # TODO: Add all parameters
+    # Output args
+    parser.add_argument(
+        "--full-output",
+        action="store_true",
+        help="Write full analysis details to NetCDF.",
+    )
 
     args = parser.parse_args()
 
@@ -104,52 +111,46 @@ def run_cli_app(args):
     logging.debug(f"Arguments: {args}")
 
     # (1) Validate parameters
-    # TODO
+    assert args.species_free_thresh >= 0, "Species-free depth threshold must be >=0"
+    assert 0 <= args.correlation_thresh <= 1.0, "Gene depth ratio selection threshold must be >=0 and <= 1.0"
+    assert 0 <= args.depth_ratio_thresh, "Gene correlation selection threshold must be >=0"
+    # TODO: Other parameters
 
     # (2) Load input data.
     logging.info(f"Reading gene depths from {args.depth_table_inpath}.")
-    depth_table = pd.read_table(args.depth_table_inpath)
+    depth_table = pd.read_table(args.depth_table_inpath, index_col=0).rename_axis(
+        index="gene", columns="sample"
+    )
 
     logging.info(f"Reading core genes from {args.core_genes_inpath}.")
     with open(args.core_genes_inpath) as f:
         core_genes = [line.strip() for line in f]
 
     logging.info(f"Reading strain partitioning from {args.strain_mapping_inpath}.")
-    strain_mapping = pd.read_table(args.strain_mapping_inpath, index_col=0)
+    strain_mapping = pd.read_table(
+        args.strain_mapping_inpath, names=["sample", "strain"]
+    )
 
     # (3) Run SPGC on data
     logging.info("Running SPGC.")
-    (
-        assignments,
-        species_depth,
-        species_free_sample_list,
-        depth_ratio,
-        depth_correlation,
-    ) = spgc.partition_gene_content(depth_table, core_genes, strain_mapping)
+    result = partition_gene_content(
+        depth_table,
+        core_genes,
+        strain_mapping,
+        args.species_free_thresh,
+        args.depth_ratio_thresh,
+        args.correlation_thresh,
+    )
 
     # (4) Write outputs
-    if args.species_depth_outpath:
-        logging.info(f"Writing estimated species depth to {args.species_depth_outpath}.")
-        species_depth.to_csv(args.species_depth_outpath, sep="\t")
+    if args.full_output:
+        logging.info(f"Writing NetCDF with all results to {args.outpath}.")
+        result.to_netcdf(args.outpath)
+    else:
+        result['gene_selected'].to_pandas().to_csv(args.outpath, sep='\t')
 
-    if args.species_free_samples_outpath:
-        logging.info(
-            f"Writing list of low-species-depth samples to {args.species_free_samples_outpath}."
-        )
-        with open(args.species_free_samples_outpath) as f:
-            for sample in species_free_sample_list:
-                print(sample, file=f)
-
-    if args.depth_ratio_outpath:
-        logging.info(f"Writing gene depth ratios to {args.depth_ratio_outpath}.")
-        depth_ratio.to_csv(args.depth_ratio_outpath, sep="\t")
-
-    if args.depth_correlation_outpath:
-        logging.info(f"Writing gene depth correlation to {args.depth_correlation_outpath}.")
-        depth_correlation.to_csv(args.depth_correlation_outpath, sep="\t")
-
-    logging.info(f"Writing gene assignments to {args.assignments_outpath}.")
-    assignments.to_csv(args.assignments_outpath, sep="\t")
+    # (5) Write strain metadata
+    # TODO
 
 
 def main():
