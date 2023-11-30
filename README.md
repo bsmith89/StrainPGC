@@ -35,6 +35,8 @@ multiple samples. Specifically, StrainPGC:
    strain is believed to be present in order to overcome the obscuring effects
    of strain mixing
 
+![StrainPGC Concept Diagram](docs/concept_diagram.png)
+
 ## Inputs:
 
 The core StrainPGC method takes three inputs for each species:
@@ -53,8 +55,6 @@ The key result provided by StrainPGC is a strain-by-gene matrix assigning gene
 families to the genomes of each of the strains.
 
 ## The StrainPGC Workflow
-
-![](docs/concept_diagram.png)
 
 A complete workflow can be divided into four phases:
 
