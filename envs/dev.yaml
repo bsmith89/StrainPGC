@@ -1,0 +1,25 @@
+name: spgc_dev
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - ipython
+  - jupyterlab
+  - line_profiler
+  - lz4
+  - matplotlib
+  - matplotlib-venn
+  - memory_profiler
+  - netCDF4
+  - numpy
+  - pandas
+  - parallel
+  - patsy
+  - scikit-learn
+  - scipy
+  - seaborn
+  - statsmodels
+  - tqdm
+  - xarray
+  - pip
