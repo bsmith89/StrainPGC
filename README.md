@@ -1,8 +1,5 @@
 # Strain Partition Gene Content (StrainPGC)
 
-**_NOTE: This repository is currently under construction. A working
-implementation of StrainPGC will be available here soon._**
-
 Strain-informed gene content inference from shotgun metagenomes
 
 ## Summary
