@@ -54,6 +54,8 @@ families to the genomes of each of the strains.
 
 ## The StrainPGC Workflow
 
+![](docs/concept_diagram.png)
+
 A complete workflow can be divided into four phases:
 
 1. Metagenomic profiling, which includes both:
