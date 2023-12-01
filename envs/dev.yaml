@@ -22,4 +22,5 @@ dependencies:
   - statsmodels
   - tqdm
   - xarray
+  - black
   - pip
