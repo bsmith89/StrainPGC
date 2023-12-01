@@ -112,8 +112,12 @@ def run_cli_app(args):
 
     # (1) Validate parameters
     assert args.species_free_thresh >= 0, "Species-free depth threshold must be >=0"
-    assert 0 <= args.correlation_thresh <= 1.0, "Gene depth ratio selection threshold must be >=0 and <= 1.0"
-    assert 0 <= args.depth_ratio_thresh, "Gene correlation selection threshold must be >=0"
+    assert (
+        0 <= args.correlation_thresh <= 1.0
+    ), "Gene depth ratio selection threshold must be >=0 and <= 1.0"
+    assert (
+        0 <= args.depth_ratio_thresh
+    ), "Gene correlation selection threshold must be >=0"
     # TODO: Other parameters
 
     # (2) Load input data.
@@ -147,7 +151,7 @@ def run_cli_app(args):
         logging.info(f"Writing NetCDF with all results to {args.outpath}.")
         result.to_netcdf(args.outpath)
     else:
-        result['gene_selected'].to_pandas().to_csv(args.outpath, sep='\t')
+        result["gene_selected"].to_pandas().to_csv(args.outpath, sep="\t")
 
     # (5) Write strain metadata
     # TODO
