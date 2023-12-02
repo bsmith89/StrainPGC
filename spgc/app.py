@@ -55,7 +55,6 @@ def parse_cli_args():
     parser.add_argument(
         "--species-free-thresh",
         "-f",
-        nargs=1,
         type=float,
         help="Species-free depth threshold.",
         default=spgc.DEFAULT_SPECIES_FREE_THRESHOLD,
@@ -63,7 +62,6 @@ def parse_cli_args():
     parser.add_argument(
         "--depth-ratio-thresh",
         "-d",
-        nargs=1,
         type=float,
         help="Depth ratio selection threshold.",
         default=spgc.DEFAULT_DEPTH_RATIO_THRESHOLD,
@@ -71,7 +69,6 @@ def parse_cli_args():
     parser.add_argument(
         "--correlation-thresh",
         "-c",
-        nargs=1,
         type=float,
         help="Correlation selection threshold.",
         default=spgc.DEFAULT_CORRELATION_THRESHOLD,
