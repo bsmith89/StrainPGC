@@ -1,4 +1,4 @@
-# `Strain` `P`artition `G`ene `C`ontent (StrainPGC)
+# `Strain` `P`artitioned `G`ene `C`ontent (StrainPGC)
 
 Strain-informed gene content inference from shotgun metagenomes
 
