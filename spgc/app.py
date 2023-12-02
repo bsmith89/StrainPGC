@@ -53,6 +53,13 @@ def parse_cli_args():
 
     # Parameters
     parser.add_argument(
+        "--trim-frac-species-genes",
+        "-s",
+        type=float,
+        help="Species genes proportion to cut for trimmed mean.",
+        default=spgc.DEFAULT_TRIM_FRAC_SPECIES_GENES,
+    )
+    parser.add_argument(
         "--species-free-thresh",
         "-f",
         type=float,
@@ -138,6 +145,7 @@ def run_cli_app(args):
         depth_table,
         core_genes,
         strain_mapping,
+        args.trim_frac_species_genes,
         args.species_free_thresh,
         args.depth_ratio_thresh,
         args.correlation_thresh,

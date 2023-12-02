@@ -1,11 +1,14 @@
 import pandas as pd
+import scipy as sp
 from scipy.spatial.distance import cdist
+import xarray as xr
 
 
 def partition_gene_content(
     depth_table,
     core_genes,
     strain_mapping,
+    trim_frac_species_mean_depth,
     species_free_thresh,
     depth_ratio_thresh,
     correlation_thresh,
@@ -22,9 +25,12 @@ def partition_gene_content(
     )
 
     # Calculate statistics
-    data["species_depth"] = data.sel(gene=data.is_core_gene).gene_depth.mean(
-        "gene"
-    )  # FIXME: Trimmed mean?
+    data["species_depth"] = xr.apply_ufunc(
+        sp.stats.trim_mean,
+        data.gene_depth.sel(gene=data.is_core_gene),
+        input_core_dims=[["gene"]],
+        kwargs=dict(axis=-1, proportiontocut=trim_frac_species_mean_depth),
+    )
     data["species_free"] = data.species_depth < species_free_thresh
 
     gene_depth_ratio = {}
