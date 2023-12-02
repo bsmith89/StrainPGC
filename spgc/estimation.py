@@ -41,7 +41,7 @@ def partition_gene_content(
         x = data.species_depth.sel(sample=strain_pure_and_species_free_samples)
         y = data.gene_depth.sel(sample=strain_pure_and_species_free_samples)
         gene_correlation[strain] = pd.Series(
-            1 - cdist(x.values.reshape((1, -1)), y.values, metric="cosine")[0],
+            1 - cdist(x.values.reshape((1, -1)), y.values, metric="correlation")[0],
             index=y.gene,
         )
     data["gene_depth_ratio"] = pd.DataFrame(gene_depth_ratio).rename_axis(
