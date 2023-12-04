@@ -7,162 +7,230 @@ import sys
 import pandas as pd
 
 
-def parse_cli_args():
+class App:
+    def __init__(self, subparsers, incantation):
+        self.parser = subparsers.add_parser(incantation, help=self._help)
+        self._add_cli_args()
+        self.parser.set_defaults(subcommand_main=self._run)
+
+    @property
+    def _help(self):
+        return self.__doc__
+
+    def _add_cli_args(self):
+        # Default arguments
+        self.parser.add_argument(
+            "--version",
+            action="version",
+            version=spgc.__version__,
+        )
+        self.parser.add_argument(
+            "--verbose",
+            "-v",
+            action="store_true",
+            help="Print info messages to stderr.",
+        )
+        self.parser.add_argument(
+            "--debug",
+            action="store_true",
+            help="Print debug messages to stderr.",
+        )
+
+        # App-specific setup.
+        self.add_custom_cli_args()
+
+    def _process_args(self, raw_args):
+        # App specific parsing/validation/transformation
+        try:
+            final_args = self.validate_and_transform_args(raw_args)
+        except AssertionError as err:
+            logging.error(f"Argument validation failed: {err}")
+            sys.exit(1)
+
+        return final_args
+
+    def _run(self, raw_args):
+        args = self._process_args(raw_args)
+
+        # Setup logging
+        logging.basicConfig(format="%(asctime)s %(message)s")
+        if args.debug:
+            logging_level = logging.DEBUG
+        elif args.verbose:
+            logging_level = logging.INFO
+        else:
+            logging_level = logging.WARNING
+        logging.getLogger().setLevel(logging_level)
+        logging.debug(f"Logging level set to {logging_level}.")
+
+        logging.debug(f"Arguments: {args}")
+
+        # Run the app specific work.
+        self.execute(args)
+
+    def help(self):
+        raise NotImplementedError
+
+    def add_custom_cli_args(self):
+        raise NotImplementedError
+
+    def validate_and_transform_args(self, args):
+        raise NotImplementedError
+
+    def execute(self, args):
+        raise NotImplementedError
+
+
+class Example(App):
+    """Example application to test the API.
+
+    """
+
+    def add_custom_cli_args(self):
+        self.parser.add_argument("--foo", action="store_true", help="Should I foo?")
+        self.parser.add_argument("--num", type=int, default=1, help="How many times?")
+
+    def validate_and_transform_args(self, args):
+        assert args.num < 5, "NUM must be less than 5"
+        return args
+
+    def execute(self, args):
+        if args.foo:
+            for i in range(args.num):
+                print("Foo!")
+        else:
+            print("Nope, that's a bar.")
+
+
+class Run(App):
+    """Run the core StrainPGC algorithm.
+
+    """
+    def add_custom_cli_args(self):
+        # Required arguments
+        self.parser.add_argument(
+            "depth_table_inpath",
+            metavar="GENE_DEPTH_TABLE",
+            help="TSV of gene depths",
+        )
+        self.parser.add_argument(
+            "core_genes_inpath",
+            metavar="CORE_GENE_LIST",
+            help="List of core genes",
+        )
+        self.parser.add_argument(
+            "strain_mapping_inpath",
+            metavar="STRAIN_MAPPING",
+            help="TSV mapping samples to strains",
+        )
+        self.parser.add_argument(
+            "outpath",
+            metavar="OUTPATH",
+            help="Where to write strain-by-gene assignments table",
+        )
+
+        # Parameters
+        self.parser.add_argument(
+            "--trim-frac-species-genes",
+            "-s",
+            type=float,
+            help="Species genes proportion to cut for trimmed mean.",
+            default=spgc.DEFAULT_TRIM_FRAC_SPECIES_GENES,
+        )
+        self.parser.add_argument(
+            "--species-free-thresh",
+            "-f",
+            type=float,
+            help="Species-free depth threshold.",
+            default=spgc.DEFAULT_SPECIES_FREE_THRESHOLD,
+        )
+        self.parser.add_argument(
+            "--depth-ratio-thresh",
+            "-d",
+            type=float,
+            help="Depth ratio selection threshold.",
+            default=spgc.DEFAULT_DEPTH_RATIO_THRESHOLD,
+        )
+        self.parser.add_argument(
+            "--correlation-thresh",
+            "-c",
+            type=float,
+            help="Correlation selection threshold.",
+            default=spgc.DEFAULT_CORRELATION_THRESHOLD,
+        )
+
+        # Output args
+        self.parser.add_argument(
+            "--full-output",
+            action="store_true",
+            help="Write full analysis details to NetCDF.",
+        )
+
+    def validate_and_transform_args(self, args):
+        # (1) Validate parameters
+        assert args.species_free_thresh >= 0, "Species-free depth threshold must be >=0"
+        assert (
+            0 <= args.correlation_thresh <= 1.0
+        ), "Gene depth ratio selection threshold must be >=0 and <= 1.0"
+        assert (
+            0 <= args.depth_ratio_thresh
+        ), "Gene correlation selection threshold must be >=0"
+        return args
+
+    def execute(self, args):
+        # (2) Load input data.
+        logging.info(f"Reading gene depths from {args.depth_table_inpath}.")
+        depth_table = pd.read_table(args.depth_table_inpath, index_col=0).rename_axis(
+            index="gene", columns="sample"
+        )
+
+        logging.info(f"Reading core genes from {args.core_genes_inpath}.")
+        with open(args.core_genes_inpath) as f:
+            core_genes = [line.strip() for line in f]
+
+        logging.info(f"Reading strain partitioning from {args.strain_mapping_inpath}.")
+        strain_mapping = pd.read_table(
+            args.strain_mapping_inpath, names=["sample", "strain"]
+        )
+
+        # (3) Run SPGC on data
+        logging.info("Running SPGC.")
+        result = partition_gene_content(
+            depth_table,
+            core_genes,
+            strain_mapping,
+            args.trim_frac_species_genes,
+            args.species_free_thresh,
+            args.depth_ratio_thresh,
+            args.correlation_thresh,
+        )
+
+        # (4) Write outputs
+        if args.full_output:
+            logging.info(f"Writing NetCDF with all results to {args.outpath}.")
+            result.to_netcdf(args.outpath)
+        else:
+            result["gene_selected"].to_pandas().to_csv(args.outpath, sep="\t")
+
+        # (5) Write strain metadata
+        # TODO
+
+
+APPLICATIONS = {
+    "run": Run,
+    "foobar": Example
+}
+
+
+def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         fromfile_prefix_chars="@",
     )
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=spgc.__version__,
-    )
-    parser.add_argument(
-        "--verbose",
-        "-v",
-        action="store_true",
-        help="Print info messages to stderr.",
-    )
-    parser.add_argument(
-        "--debug",
-        action="store_true",
-        help="Print debug messages to stderr.",
-    )
+    subparsers = parser.add_subparsers(dest="cmd", metavar="CMD", required=True)
+    for invocation, app_class in APPLICATIONS.items():
+        app_class(subparsers, invocation)
 
-    # Required arguments
-    parser.add_argument(
-        "depth_table_inpath",
-        metavar="GENE_DEPTH_TABLE",
-        help="TSV of gene depths",
-    )
-    parser.add_argument(
-        "core_genes_inpath",
-        metavar="CORE_GENE_LIST",
-        help="List of core genes",
-    )
-    parser.add_argument(
-        "strain_mapping_inpath",
-        metavar="STRAIN_MAPPING",
-        help="TSV mapping samples to strains",
-    )
-    parser.add_argument(
-        "outpath",
-        metavar="OUTPATH",
-        help="Where to write strain-by-gene assignments table",
-    )
-
-    # Parameters
-    parser.add_argument(
-        "--trim-frac-species-genes",
-        "-s",
-        type=float,
-        help="Species genes proportion to cut for trimmed mean.",
-        default=spgc.DEFAULT_TRIM_FRAC_SPECIES_GENES,
-    )
-    parser.add_argument(
-        "--species-free-thresh",
-        "-f",
-        type=float,
-        help="Species-free depth threshold.",
-        default=spgc.DEFAULT_SPECIES_FREE_THRESHOLD,
-    )
-    parser.add_argument(
-        "--depth-ratio-thresh",
-        "-d",
-        type=float,
-        help="Depth ratio selection threshold.",
-        default=spgc.DEFAULT_DEPTH_RATIO_THRESHOLD,
-    )
-    parser.add_argument(
-        "--correlation-thresh",
-        "-c",
-        type=float,
-        help="Correlation selection threshold.",
-        default=spgc.DEFAULT_CORRELATION_THRESHOLD,
-    )
-
-    # Output args
-    parser.add_argument(
-        "--full-output",
-        action="store_true",
-        help="Write full analysis details to NetCDF.",
-    )
-
-    args = parser.parse_args()
-
-    # If no arguments passed to app, print usage and error out.
-    if len(sys.argv) < 2:
-        parser.print_usage()
-        sys.exit(1)
-
-    return args
-
-
-def setup_cli_logging(args):
-    # Setup logging
-    logging.basicConfig(format="%(asctime)s %(message)s")
-    if args.debug:
-        logging_level = logging.DEBUG
-    elif args.verbose:
-        logging_level = logging.INFO
-    else:
-        logging_level = logging.WARNING
-    logging.getLogger().setLevel(logging_level)
-    logging.debug(f"Logging level set to {logging_level}.")
-
-
-def run_cli_app(args):
-    logging.debug(f"Arguments: {args}")
-
-    # (1) Validate parameters
-    assert args.species_free_thresh >= 0, "Species-free depth threshold must be >=0"
-    assert (
-        0 <= args.correlation_thresh <= 1.0
-    ), "Gene depth ratio selection threshold must be >=0 and <= 1.0"
-    assert (
-        0 <= args.depth_ratio_thresh
-    ), "Gene correlation selection threshold must be >=0"
-    # TODO: Other parameters
-
-    # (2) Load input data.
-    logging.info(f"Reading gene depths from {args.depth_table_inpath}.")
-    depth_table = pd.read_table(args.depth_table_inpath, index_col=0).rename_axis(
-        index="gene", columns="sample"
-    )
-
-    logging.info(f"Reading core genes from {args.core_genes_inpath}.")
-    with open(args.core_genes_inpath) as f:
-        core_genes = [line.strip() for line in f]
-
-    logging.info(f"Reading strain partitioning from {args.strain_mapping_inpath}.")
-    strain_mapping = pd.read_table(
-        args.strain_mapping_inpath, names=["sample", "strain"]
-    )
-
-    # (3) Run SPGC on data
-    logging.info("Running SPGC.")
-    result = partition_gene_content(
-        depth_table,
-        core_genes,
-        strain_mapping,
-        args.trim_frac_species_genes,
-        args.species_free_thresh,
-        args.depth_ratio_thresh,
-        args.correlation_thresh,
-    )
-
-    # (4) Write outputs
-    if args.full_output:
-        logging.info(f"Writing NetCDF with all results to {args.outpath}.")
-        result.to_netcdf(args.outpath)
-    else:
-        result["gene_selected"].to_pandas().to_csv(args.outpath, sep="\t")
-
-    # (5) Write strain metadata
-    # TODO
-
-
-def main():
-    args = parse_cli_args()
-    setup_cli_logging(args)
-    run_cli_app(args)
+    # Default parsing
+    raw_args = parser.parse_args(sys.argv[1:])
+    raw_args.subcommand_main(raw_args)
