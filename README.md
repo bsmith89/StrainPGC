@@ -34,7 +34,49 @@ multiple samples. Specifically, StrainPGC:
 
 ![StrainPGC Concept Diagram](docs/concept_diagram.png)
 
-## Inputs:
+
+## Quick-start
+
+### Installation
+
+Canonically, StrainPGC can be installed directly from this code repository using setuptools/pip:
+
+```
+git clone https://github.com/bsmith89/StrainPGC StrainPGC
+cd StrainPGC
+pip install .
+```
+
+This will also install all Python software dependencies, which currently include:
+
+- pandas
+- xarray
+- netcdf4
+- scipy
+
+### Basic Usage
+
+Example input data are provided for testing and demonstration purposes:
+
+With correctly formatted input data, StrainPGC method is run as follows:
+
+```
+spgc run \
+    example_data/100035.gene_depth.tsv.gz \
+    example_data/100035.core_gene.list \
+    example_data/100035.strain_map.tsv \
+    example_data/100035.spgc.tsv
+```
+
+where `example_data/100035.spgc.tsv` is the desired output path.
+
+Additional options are described in the help:
+
+```
+spgc run --help
+```
+
+## Inputs
 
 The core StrainPGC method takes three inputs for each species:
 
