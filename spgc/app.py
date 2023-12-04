@@ -1,13 +1,25 @@
 from spgc.estimation import partition_gene_content
-from spgc.pandas_util import idxwhere
 import spgc
 import logging
-import argparse
 import sys
 import pandas as pd
 
 
 class App:
+    """Base-class for subcommand "applications".
+
+    Custom subcommands must subclass App (or a subclass of App) and override
+    the following methods:
+
+    - add_custom_cli_args
+    - validate_and_transform_args
+    - execute
+
+    Subcommands can then be registered in spgc.__main__ by adding them to the
+    *APPLICATIONS* dict.
+
+    """
+
     def __init__(self, subparsers, incantation):
         self.parser = subparsers.add_parser(incantation, help=self._help)
         self._add_cli_args()
@@ -69,19 +81,44 @@ class App:
         self.execute(args)
 
     def add_custom_cli_args(self):
+        """Add app-specific CLI args to parser.
+
+        Subclasses of App must override this method.
+        Arguments may be added to self.parser, an
+        instance of argparse.Parser.  # TODO: Check this.
+
+        """
         raise NotImplementedError
 
     def validate_and_transform_args(self, args):
+        """Add custom argument validation/transformation/parsing.
+
+        Subclasses of App must override this method.
+
+        This method is used by subclasses to
+        implement any validation/transformation/parsing of
+        the "raw" argparse.Namespace object
+        that cannot be implemented easily within the argparse.Parser API.
+
+        Subclass methods must operate only on the *args* input
+        and must return an argparse.Namespace for usage during execution.
+
+        """
         raise NotImplementedError
 
     def execute(self, args):
+        """Implement all remaining work for the specific application.
+
+        Subclasses of App must override this method.
+
+        Execution should rely only on the properties of *args*.
+
+        """
         raise NotImplementedError
 
 
 class Example(App):
-    """Example application to test the API.
-
-    """
+    """Example application to test the API."""
 
     def add_custom_cli_args(self):
         self.parser.add_argument("--foo", action="store_true", help="Should I foo?")
@@ -100,9 +137,8 @@ class Example(App):
 
 
 class Run(App):
-    """Run the core StrainPGC algorithm.
+    """Run the core StrainPGC algorithm."""
 
-    """
     def add_custom_cli_args(self):
         # Required arguments
         self.parser.add_argument(
@@ -211,23 +247,3 @@ class Run(App):
 
         # (5) Write strain metadata
         # TODO
-
-
-APPLICATIONS = {
-    "run": Run,
-    "foobar": Example
-}
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        fromfile_prefix_chars="@",
-    )
-    subparsers = parser.add_subparsers(dest="cmd", metavar="CMD", required=True)
-    for invocation, app_class in APPLICATIONS.items():
-        app_class(subparsers, invocation)
-
-    # Default parsing
-    raw_args = parser.parse_args(sys.argv[1:])
-    raw_args.subcommand_main(raw_args)
