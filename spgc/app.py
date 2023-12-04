@@ -68,9 +68,6 @@ class App:
         # Run the app specific work.
         self.execute(args)
 
-    def help(self):
-        raise NotImplementedError
-
     def add_custom_cli_args(self):
         raise NotImplementedError
 
