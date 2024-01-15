@@ -1,5 +1,6 @@
 import pandas as pd
 import scipy as sp
+import numpy as np
 from scipy.spatial.distance import cdist
 import xarray as xr
 
@@ -60,6 +61,14 @@ def partition_gene_content(
     # Select genes
     data["gene_selected"] = (data.gene_depth_ratio >= depth_ratio_thresh) & (
         data.gene_correlation >= correlation_thresh
+    )
+
+    data["log_species_gene_depth_std"] = np.log10(
+        data["gene_depth_ratio"].sel(gene=data.is_core_gene) + depth_ratio_thresh
+    ).std("gene")
+
+    data["species_gene_frac"] = (
+        data["gene_selected"].sel(gene=data.is_core_gene).mean("gene")
     )
 
     # Return result
