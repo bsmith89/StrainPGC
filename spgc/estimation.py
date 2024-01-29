@@ -27,6 +27,7 @@ def partition_gene_content(
         .reindex(data.sample.values)
         .fillna(False)
     )
+    # TODO: Consider dropping this matrix and replacing the loop below with a groupby-apply.
 
     # Calculate statistics
     data["species_depth"] = xr.apply_ufunc(
@@ -40,6 +41,8 @@ def partition_gene_content(
     gene_depth_ratio = {}
     gene_correlation = {}
     for strain in data.strain.values:
+        # NOTE: (2024-01-15) This is difficult to do as a groupby, because
+        # we need data from species_free_samples, too.
         strain_pure_samples = data.strain_pure.sel(strain=strain, drop=True)
         total_species_depth = data.species_depth.sel(sample=strain_pure_samples).sum(
             "sample"
