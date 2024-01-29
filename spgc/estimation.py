@@ -17,6 +17,9 @@ def partition_gene_content(
     # Construct a dataset
     data = depth_table.stack().to_xarray().to_dataset(name="gene_depth")
     data["is_core_gene"] = data.gene.isin(core_genes)
+    # Strain info is currently stored redundantly as both a series of labels,
+    data["pure_strain"] = strain_mapping.set_index("sample").strain
+    # and a binary matrix.
     data["strain_pure"] = (
         strain_mapping.set_index(["sample", "strain"])
         .assign(flag=True)
@@ -63,10 +66,39 @@ def partition_gene_content(
         data.gene_correlation >= correlation_thresh
     )
 
-    data["log_species_gene_depth_std"] = np.log10(
+    # Strain metadata
+    strain_sample_metadata = (
+        data["species_depth"]
+        .to_series()
+        .groupby(data["pure_strain"].to_series())
+        .agg(["count", "sum", "max"])
+        .rename_axis("strain")
+        .rename(
+            columns={
+                "count": "num_strain_sample",
+                "sum": "sum_strain_depth",
+                "max": "max_strain_depth",
+            }
+        )
+        .to_xarray()
+    )
+    data = xr.merge([data, strain_sample_metadata])
+    data["num_gene"] = data.gene_selected.sum("gene")
+    # QC Stats
+    data["log_species_gene_depth_ratio_std"] = np.log10(
         data["gene_depth_ratio"].sel(gene=data.is_core_gene) + depth_ratio_thresh
     ).std("gene")
-
+    data["log_selected_gene_depth_ratio_std"] = (
+        np.log10(
+            data[["gene_depth_ratio", "gene_selected"]]
+            .to_dataframe()[lambda x: x.gene_selected]
+            .gene_depth_ratio
+            + depth_ratio_thresh
+        )
+        .groupby("strain")
+        .std()
+        .to_xarray()
+    )
     data["species_gene_frac"] = (
         data["gene_selected"].sel(gene=data.is_core_gene).mean("gene")
     )

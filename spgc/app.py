@@ -223,7 +223,9 @@ class Run(App):
 
         logging.info(f"Reading strain partitioning from {args.strain_mapping_inpath}.")
         strain_mapping = pd.read_table(
-            args.strain_mapping_inpath, names=["sample", "strain"]
+            args.strain_mapping_inpath,
+            names=["sample", "strain"],
+            dtype=str,
         )
 
         # (3) Run SPGC on data
