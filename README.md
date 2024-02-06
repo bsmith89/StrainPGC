@@ -1,4 +1,4 @@
-# `Strain` `P`artitioned `G`ene `C`ontent (StrainPGC)
+# `Strain` `P`ure `G`ene `C`ontent (StrainPGC)
 
 Strain-informed gene content inference from shotgun metagenomes
 
@@ -28,11 +28,11 @@ multiple samples. Specifically, StrainPGC:
    ratio
 2. Also considers the correlation between gene depth and species depth,
    reducing the impact of cross-mapping of reads across multiple species
-3. Considers, one at a time, subsets of samples (partitions) where a single
+3. Considers, one at a time, subsets of samples where a single
    strain is believed to be present in order to overcome the obscuring effects
    of strain mixing
 
-![StrainPGC Concept Diagram](docs/concept_diagram.png)
+![StrainPGC Concept Diagram](docs/concept_diagram.svg)
 
 
 ## Quick-start
@@ -82,7 +82,7 @@ The core StrainPGC method takes three inputs for each species:
 
 1. Pangenome profiles: a sample-by-gene matrix of mapping depths
 2. Species core genes: a list of genes believed to be found in single copy in every strain of the species
-3. Strain partitions: a mapping of samples to individual strains
+3. Strain-pure samples: a mapping of samples to individual strains
 
 A suggested protocol for obtaining each of these inputs directly from raw
 metagenomic data as part of the larger StrainPGC workflow is described below
@@ -100,7 +100,7 @@ A complete workflow can be divided into four phases:
 1. Metagenomic profiling, which includes both:
     - SNP profiling for strain tracking
     - Pangenome profiling
-2. Strain tracking / sample partitioning
+2. Strain tracking / identification of strain-pure sets
 3. Running the StrainPGC algorithm
 4. Quality assessment / control
 
@@ -126,10 +126,10 @@ runtime and memory requirements of all other steps.**
 
 ### Strain tracking
 
-The StrainPGC workflow tracks strains based on SNP profiles using [StrainFacts](https://github.com/bsmith89/StrainFacts).
+The StrainPGC workflow estimates strain compositions in each sample based on
+SNP profiles using [StrainFacts](https://github.com/bsmith89/StrainFacts).
 
-Strain partitions are then composed of samples pure (or nearly pure) for a
-single strain.
+Sets of samples that are pure (or nearly pure) for a single strain are selected based on these estimates.
 
 ### Quality assessment
 
