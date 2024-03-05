@@ -1,4 +1,8 @@
-from spgc.estimation import partition_gene_content
+from spgc.estimation import (
+    partition_gene_content,
+    estimate_depth,
+    load_depth_and_core_genes_list_to_xarray,
+)
 import spgc
 import logging
 import sys
@@ -134,6 +138,64 @@ class Example(App):
                 print("Foo!")
         else:
             print("Nope, that's a bar.")
+
+
+class EstimateSpeciesDepth(App):
+    """Run species depth estimation only."""
+
+    def add_custom_cli_args(self):
+        # Required arguments
+        self.parser.add_argument(
+            "depth_table_inpath",
+            metavar="GENE_DEPTH_TABLE",
+            help="TSV of gene depths",
+        )
+        self.parser.add_argument(
+            "core_genes_inpath",
+            metavar="CORE_GENE_LIST",
+            help="List of core genes",
+        )
+        self.parser.add_argument(
+            "outpath",
+            metavar="OUTPATH",
+            help="Where to write estimated sample-by-depth table",
+        )
+
+        # Parameters
+        self.parser.add_argument(
+            "--trim-frac-species-genes",
+            "-s",
+            type=float,
+            help="Species genes proportion to cut for trimmed mean.",
+            default=spgc.DEFAULT_TRIM_FRAC_SPECIES_GENES,
+        )
+
+    def validate_and_transform_args(self, args):
+        # (1) Validate parameters
+        assert (
+            0 <= args.trim_frac_species_genes < 0.5
+        ), "Species gene trimming fraction must be >= 0 and <= 1.0"
+        return args
+
+    def execute(self, args):
+        # (2) Load input data.
+        logging.info(f"Reading gene depths from {args.depth_table_inpath}.")
+        depth_table = pd.read_table(args.depth_table_inpath, index_col=0).rename_axis(
+            index="gene", columns="sample"
+        )
+
+        logging.info(f"Reading core genes from {args.core_genes_inpath}.")
+        with open(args.core_genes_inpath) as f:
+            core_genes = [line.strip() for line in f]
+
+        # (3) Run estimation
+        logging.info("Running Depth Estimation.")
+        data = load_depth_and_core_genes_list_to_xarray(depth_table, core_genes)
+        result = estimate_depth(data, args.trim_frac_species_genes)
+
+        # (4) Write outputs
+        logging.info(f"Writing results table to {args.outpath}.")
+        result.to_pandas().to_csv(args.outpath, sep="\t", header=False)
 
 
 class Run(App):

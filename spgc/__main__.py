@@ -2,7 +2,11 @@ import spgc.app
 import argparse
 import sys
 
-APPLICATIONS = {"run": spgc.app.Run, "foobar": spgc.app.Example}
+APPLICATIONS = {
+    "run": spgc.app.Run,
+    "estimate_species_depth": spgc.app.EstimateSpeciesDepth,
+    "foobar": spgc.app.Example,
+}
 
 
 def main():
