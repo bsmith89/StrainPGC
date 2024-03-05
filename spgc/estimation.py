@@ -5,6 +5,24 @@ from scipy.spatial.distance import cdist
 import xarray as xr
 
 
+def load_depth_and_core_genes_list_to_xarray(depth_table, core_genes):
+    data = depth_table.stack().to_xarray().to_dataset(name="gene_depth")
+    data["is_core_gene"] = data.gene.isin(core_genes)
+    return data
+
+
+def estimate_depth(
+    data,
+    trim_frac_species_mean_depth,
+):
+    return xr.apply_ufunc(
+        sp.stats.trim_mean,
+        data.gene_depth.sel(gene=data.is_core_gene),
+        input_core_dims=[["gene"]],
+        kwargs=dict(axis=-1, proportiontocut=trim_frac_species_mean_depth),
+    )
+
+
 def partition_gene_content(
     depth_table,
     core_genes,
@@ -15,8 +33,7 @@ def partition_gene_content(
     correlation_thresh,
 ):
     # Construct a dataset
-    data = depth_table.stack().to_xarray().to_dataset(name="gene_depth")
-    data["is_core_gene"] = data.gene.isin(core_genes)
+    data = load_depth_and_core_genes_list_to_xarray(depth_table, core_genes)
     # Strain info is currently stored redundantly as both a series of labels,
     data["pure_strain"] = strain_mapping.set_index("sample").strain
     # and a binary matrix.
@@ -30,12 +47,7 @@ def partition_gene_content(
     # TODO: Consider dropping this matrix and replacing the loop below with a groupby-apply.
 
     # Calculate statistics
-    data["species_depth"] = xr.apply_ufunc(
-        sp.stats.trim_mean,
-        data.gene_depth.sel(gene=data.is_core_gene),
-        input_core_dims=[["gene"]],
-        kwargs=dict(axis=-1, proportiontocut=trim_frac_species_mean_depth),
-    )
+    data["species_depth"] = estimate_depth(data, trim_frac_species_mean_depth)
     data["species_free"] = data.species_depth < species_free_thresh
 
     gene_depth_ratio = {}
