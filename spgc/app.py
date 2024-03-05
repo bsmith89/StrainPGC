@@ -201,6 +201,9 @@ class Run(App):
 
     def validate_and_transform_args(self, args):
         # (1) Validate parameters
+        assert (
+            0 <= args.trim_frac_species_genes < 0.5
+        ), "Species gene trimming fraction must be >= 0 and <= 1.0"
         assert args.species_free_thresh >= 0, "Species-free depth threshold must be >=0"
         assert (
             0 <= args.correlation_thresh <= 1.0
