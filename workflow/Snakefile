@@ -1,0 +1,68 @@
+# Imports
+
+# Config  # Should go in config.yaml
+## Main singularity image
+## GT-Pro singularity image
+## Path to GRCh38
+## Path to Illumina adapters
+## Path to MIDASDB
+## Run parameters
+### Strain-tracking
+#### Metagenotype filtering params
+##### Coverage across samples
+##### Minor allele frequency
+#### Metagenotype subsampling params
+##### Number of positions
+#### StrainFacts model-fitting params
+#### Strain purity
+##### Strategy
+### Pangenome profiling
+#### Bowtie2 params
+#### Aggregation centroid
+### StrainPGC
+#### Depth transformation exponent
+#### Correlation threshold
+#### Depth-ratio threshold
+
+# Metadata  # Paths to metadata files should go in config.yaml?
+## Load species list
+## Load species genes list
+## Load metagenome paths
+
+# Pre-processing Metagenomes
+## Filter-out host reads
+
+## Deduplicate
+
+## Adapter trim
+
+## Quality trim
+
+# GT-Pro
+## Run core algorithm
+## Postprocess
+### TODO: Combine processing and post-processing into one step?
+### TODO: Decide if I'm using my sqlite3 based solution or built-in script from zjshi?
+## Merge
+
+
+# StrainFacts
+## Filter
+## Subsample
+## Fit
+## Export strain details
+## Select strain-pure samples
+
+
+# MIDAS and Depth Profiling
+## Build MIDASDB index
+## Align
+## Profile
+## Merge
+
+
+# StrainPGC
+## Run
+## Compile metadata
+### Aggregate metagenotype
+### Finalize
