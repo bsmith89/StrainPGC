@@ -3,10 +3,11 @@
 # Config  # Should go in config.yaml
 ## Main singularity image
 ## GT-Pro singularity image
-## Path to GRCh38
+## Path to host bowtie2 index
 ## Path to Illumina adapters
 ## Path to MIDASDB
 ## Run parameters
+### Preprocesing infix (e.g. hfilt.dedup.deadapt.qtrim}
 ### Strain-tracking
 #### Metagenotype filtering params
 ##### Coverage across samples
@@ -31,26 +32,258 @@
 
 # Pre-processing Metagenomes
 ## Filter-out host reads
+rule filter_out_human_reads:
+    output:
+        r1="data/reads/{mgen}/r1{stem}hfilt.fq.gz",
+        r2="data/reads/{mgen}/r2{stem}hfilt.fq.gz",
+    input:
+        script="scripts/filter_out_mapping_reads.sh",  # FIXME
+        r1="data/reads/{mgen}/r1{stem}fq.gz",
+        r2="data/reads/{mgen}/r2{stem}fq.gz",
+        index=[
+            "{config[host_index_stem]}.1.bt2",
+            "{config[host_index_stem]}.2.bt2",
+            "{config[host_index_stem]}.3.bt2",
+            "{config[host_index_stem]}.4.bt2",
+            "{config[host_index_stem]}.rev.1.bt2",
+            "{config[host_index_stem]}.rev.2.bt2",
+        ],
+    params:
+        index="{config[host_index_stem]}",
+    threads: 8
+    resources:
+        mem_mb=10_000,
+    shell:
+        """
+        {input.script} {threads} {params.index} {input.r1} {input.r2} {output.r1} {output.r2}
+        """
+
 
 ## Deduplicate
+rule deduplicate_reads:
+    output:
+        r1=temp("data/reads/{mgen}/r1{stem}dedup.fq.gz"),
+        r2=temp("data/reads/{mgen}/r2{stem}dedup.fq.gz"),
+    input:
+        script="scripts/fastuniq_wrapper.sh",  # FIXME
+        r1="data/reads/{mgen}/r1{stem}fq.gz",
+        r2="data/reads/{mgen}/r2{stem}fq.gz",
+    resources:
+        mem_mb=10_000,
+    shell:
+        "{input.script} {input.r1} {input.r2} {output.r1} {output.r2}"
+
 
 ## Adapter trim
+rule trim_adapters:
+    output:
+        fq=temp("data/reads/{mgen}/{stem}.deadapt.fq.gz"),
+    input:
+        adapters="ref/illumina_adapters.fn",
+        fq="data/reads/{mgen}/{stem}.fq.gz",
+    log:
+        "log/{stem}.scythe.log",
+    threads: 2
+    shell:
+        dd(
+            """
+        scythe -a {input.adapters} {input.fq} 2>{log} | gzip -c > {output.fq}
+        ! grep -Fxq 'Blank FASTA header or sequence in adapters file.' {log}
+        """
+        )
+
 
 ## Quality trim
+rule quality_trim_reads:
+    output:
+        r1=temp("data/reads/{mgen}/r1{stem}qtrim.fq.gz"),
+        r2=temp("data/reads/{mgen}/r2{stem}qtrim.fq.gz"),
+        r3=temp("data/reads/{mgen}/r3{stem}qtrim.fq.gz"),
+    input:
+        r1="data/reads/{mgen}/r1{stem}fq.gz",
+        r2="data/reads/{mgen}/r2{stem}fq.gz",
+    params:
+        qual_type="sanger",
+        qual_thresh=20,
+    shell:
+        dd(
+            """
+        sickle pe -t {params.qual_type} -q {params.qual_thresh} --gzip-output \
+            --pe-file1 {input.r1} --pe-file2 {input.r2} \
+            --output-pe1 {output.r1} --output-pe2 {output.r2} \
+            --output-single {output.r3}
+        """
+        )
+
+## Alias Preprocessed Reads
+rule alias_preprocessed_reads:
+    output: "data/reads/{mgen}/{stem}.proc.fq.gz"
+    input:  "data/reads/{mgen}/{stem}.{config[proc_infix]}.fq.gz"
+    shell:
+        "ln -rs {input} {output}"
+
 
 # GT-Pro
 ## Run core algorithm
+rule run_gtpro:
+    output:
+        temp("data/gtpro/{mgen}/{stem}.gtpro_raw.gz"),
+    input:
+        r="data/reads/{mgen}/{stem}.fq.gz",
+        db="ref/gtpro",
+    params:
+        db_l=32,
+        db_m=36,
+        db_name=config["gtpro_ref_stem"]  # FIXME "ref/gtpro/20190723_881species",  # FIXME
+    threads: 8
+    resources:
+        mem_mb=10000,
+    container:
+        config["container"]["gtpro"]
+    shell:
+        """
+        GT_Pro genotype -t {threads} -l {params.db_l} -m {params.db_m} -d {params.db_name} -o {output}.temp {input.r}
+        mv {output}.temp.tsv.gz {output}
+        """
+
 ## Postprocess
-### TODO: Combine processing and post-processing into one step?
-### TODO: Decide if I'm using my sqlite3 based solution or built-in script from zjshi?
+rule gtpro_finish_processing_reads:
+    output:
+        "data/gtpro/{mgen}/{stem}.gtpro_parse.tsv.bz2",
+    input:
+        "data/gtpro/{mgen}/{stem}.gtpro_raw.gz",
+    container:
+        config["container"]["gtpro"]
+    shell:
+        "false  # FIXME"
+
 ## Merge
+rule merge_gtpro_counts:
+    output:
+        "data/species/{species}/r.proc.gtpro.tsv.bz2",
+    input:
+        script="scripts/merge_gtpro_counts.py",  # FIXME
+        r1=[f"data/gtpro/{mgen}/r1.proc.gtpro_parse.tsv.bz2" for mgen in config[mgen_list]]
+        r2=[f"data/gtpro/{mgen}/r2.proc.gtpro_parse.tsv.bz2" for mgen in config[mgen_list]]
+    params:
+        species=lambda w: w.species,
+        args=[f"{mgen}=data/gtpro/{mgen}/r1.proc.gtpro_parse.tsv.bz2:data/gtpro/{mgen}/r2.proc.gtpro_parse.tsv.bz2" for mgen in config["mgen_list"]]
+    threads: 6
+    shell:
+        """
+        {input.script} {params.species} {output} {params.args}
+        """
 
 
 # StrainFacts
+## Load
+rule load_metagenotype_from_merged_gtpro:
+    output:
+        "data/sfacts/{stem}.gtpro.mgtp.nc",
+    input:
+        "data/sfacts/{stem}.gtpro.tsv.bz2",
+    conda:
+        "conda/sfacts.yaml"
+    shell:
+        """
+        sfacts load --gtpro-metagenotype {input} {output}
+        """
+
 ## Filter
+rule filter_metagenotype:
+    output:
+        "data/sfacts/{stem}.filt-poly{poly}-cvrg{cvrg}.mgtp.nc",
+    input:
+        "data/sfacts/{stem}.mgtp.nc",
+    wildcard_constraints:
+        poly="[0-9]+",
+        cvrg="[0-9]+",
+    params:
+        poly=lambda w: float(w.poly) / 100,
+        cvrg=lambda w: float(w.cvrg) / 100,
+    conda:
+        "conda/sfacts.yaml"
+    resources:
+        mem_mb=12_000,
+    shell:
+        """
+        sfacts filter_mgen \
+                --min-minor-allele-freq {params.poly} \
+                --min-horizontal-cvrg {params.cvrg} \
+                {input} {output}
+        """
+
+
 ## Subsample
+rule subset_metagenotype:
+    output:
+        "data/sfacts/{stem}.ss-g{num_positions}-block{block_number}-seed{seed}.mgtp.nc",
+    input:
+        "data/sfacts/{stem}.mgtp.nc",
+    wildcard_constraints:
+        num_positions=integer_wc,
+        block_number=integer_wc,
+        seed=integer_wc,
+    params:
+        seed=lambda w: int(w.seed),
+        num_positions=lambda w: int(w.num_positions),
+        block_number=lambda w: int(w.block_number),
+    conda:
+        "conda/sfacts.yaml"
+    shell:
+        """
+        sfacts sample_mgen \
+                --random-seed {params.seed} \
+                --num-positions {params.num_positions} \
+                --block-number {params.block_number} \
+                {input} \
+                {output}
+        """
+
+
 ## Fit
+rule fit_sfacts:
+    output:
+        fit="data/sfacts/{stem}.fit-sfacts{strategy}-s{strain_exponent}-seed{seed}.world.nc",
+        hist="data/sfacts/{stem}.fit-sfacts{strategy}-s{strain_exponent}-seed{seed}.loss_history",
+    input:
+        mgen="data/sfacts/{stem}.mgtp.nc",
+        strategy=config["sfacts_strategy_file"],
+    wildcard_constraints:
+        strain_exponent="[0-9]+",
+        nposition="[0-9]+",
+        seed="[0-9]+",
+    params:
+        strain_exponent=lambda w: float(w.strain_exponent) / 100,
+        seed=lambda w: int(w.seed),
+    resources:
+        mem_mb=5_000,
+    conda:
+        "conda/sfacts.yaml"
+    shell:
+        """
+        sfacts fit \
+                @{input.strategy} \
+                --verbose \
+                --random-seed {params.seed} \
+                --strain-sample-exponent {params.strain_exponent} \
+                --history-outpath {output.hist} \
+                -- {input.mgen} {output.fit}
+        """
+
 ## Export strain details
+rule export_sfacts_comm:
+    output:
+        "{stem}.comm.tsv",
+    input:
+        "{stem}.world.nc",
+    conda:
+        "conda/sfacts.yaml"
+    shell:
+        """
+        sfacts dump --community {output} {input}
+        """
+
 ## Select strain-pure samples
 
 
