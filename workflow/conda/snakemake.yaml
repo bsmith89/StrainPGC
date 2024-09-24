@@ -1,0 +1,14 @@
+name: snakemake
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python
+  - snakemake>=8.20
+  - ipython
+  - pip
+  - black
+  - drmaa
+  - snakefmt
+  - pip:
+    - daff
