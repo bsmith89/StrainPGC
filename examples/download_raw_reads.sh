@@ -3,6 +3,8 @@
 # SAMPLES="HSM67VDP HSM6XRSI PSM6XBW3 PSM7J1A2 MSM79HCG MSM79HCI"
 SAMPLES="MSM79HCI"
 
+mkdir -p raw
+cd raw
 for sample in $SAMPLES
 do
     echo $sample
@@ -10,3 +12,4 @@ do
     && tar -xf $sample.tar \
     && rm $sample.tar
 done
+cd ..
