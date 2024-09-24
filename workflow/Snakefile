@@ -155,6 +155,36 @@ rule alias_preprocessed_reads:
 
 
 # MIDAS and Pangenome Profiling
+## Initialize MIDASDB locally
+rule download_midasdb_for_species:
+    output:
+        flag="{config[outdir]}/midas/midasdb_initialized.flag"
+    input:
+        species_list="{config[outdir]}/input/species.list",
+    params:
+        dir=config["midasdb_dir"]
+    conda:
+        "conda/midas.yaml"
+    shell:
+        """
+        false  # FIXME: midas downloaddb; Figure out how to reliable download all species.
+        """
+
+
+rule symlink_midasdb_gene_metadata:
+    output:
+        "{config[outdir]}/midas/species/{species}/genes_info.tsv"
+    input:
+        "{config[outdir]}/midas/midasdb_initialized.flag"
+    params:
+        dir=config["midasdb_dir"]
+    shell:
+        """
+        ln -rs $(realpath {params.dir}/pangenomes/{wildcards.species}/genes_info.tsv") {output}
+        """
+
+
+
 ## Build MIDASDB index
 rule build_midas_pangenomes_bowtie_index:
     output:
@@ -162,6 +192,8 @@ rule build_midas_pangenomes_bowtie_index:
     input:
         midasdb_dir=config["midasdb_dir"],
         species_list="{config[outdir]}/input/species.list",
+    params:
+        midasdb_name="uhgg",
     conda:
         "conda/midas3.yaml"
     threads: 96
@@ -172,7 +204,7 @@ rule build_midas_pangenomes_bowtie_index:
         midas2 build_bowtie2db \
                 --bt2_indexes_dir {output.dir} \
                 --bt2_indexes_name pangenomes \
-                --midasdb_name newdb \
+                --midasdb_name {params.midasdb_name} \
                 --midasdb_dir {input.midasdb_dir} \
                 --select_threshold=-1 \
                 --species_list {input.species_list} \
@@ -194,6 +226,7 @@ rule run_midas_genes_align_only:
     params:
         outdir="{config[outdir]}/midas/reads/{mgen}/pangenome_profile.midas.d",
         outbam="{config[outdir]}/midas/reads/{mgen}/pangenome_profile.midas.d/{mgen}/genes/{mgen}.bam",
+        midasdb_name="uhgg",
     conda:
         "conda/midas3.yaml"
     threads: 4
@@ -204,8 +237,7 @@ rule run_midas_genes_align_only:
         midas run_genes --num_cores {threads} \
                 -1 {input.r1} -2 {input.r2} \
                 --sample_name {wildcards.mgen} \
-                --midasdb_name newdb \
-                --midasdb_dir {input.midasdb_dir} \
+                --midasdb_name {params.midasdb_name} \
                 --prebuilt_bowtie2_indexes {input.bowtie_indexes}/pangenomes \
                 --prebuilt_bowtie2_species {input.species_list} \
                 --select_threshold=-1 \
@@ -251,7 +283,7 @@ rule merge_and_aggregate_pangenome_profiles:
             f"{config[outdir]}/midas/reads/{mgen}/pangenome_profile_raw.gene_mapping_tally.tsv.lz4"
             for mgen in config[mgen_list]
         ],
-        gene_info="{config[midasdb_dir]}/pangenomes/{species}/genes_info.tsv",
+        gene_info="{config[outdir]}/midas/species/{species}/genes_info.tsv"
     params:
         args=lambda w: [
             f"mgen={config[outdir]}/midas/reads/{mgen}/pangenome_profile_raw.gene_mapping_tally.tsv.lz4"
