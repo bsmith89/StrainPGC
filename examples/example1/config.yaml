@@ -1,0 +1,13 @@
+outdir: 'examples/example1/results'
+sample_manifest_path: 'examples/example1/sample.tsv'
+species_list_path: 'examples/example1/species.list'
+species_gene_path: 'examples/ref/species_gene.tsv'
+host_bt2_index_stem: 'examples/ref/GRCh38.bt2.d/GRCh38'
+illumina_adapters_fasta_path: 'examples/ref/illumina_adapters.fa'
+midasdb_dir: 'examples/ref/midasdb_uhgg.d'
+preprocessing_infix: 'hfilt.dedup.deadapt.qtrim'
+sfacts_infix: 'filt-poly05-cvrg05.ss-g1000-block0-seed0.sfacts-s85-seed0'
+sfacts_strategy_path: 'examples/example1/sfacts_strategy.args'
+pangenome_profiling_agg_level: '75'
+gtpro_ref_dir: "examples/ref/gtpro"
+gtpro_ref_name: 'examples/ref/gtpro/20190723_881species'

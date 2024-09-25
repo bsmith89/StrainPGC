@@ -1,0 +1,7 @@
+mgen	r1_path	r2_path
+HSM67VDP	examples/input/reads/HSM67VDP_R1.fastq.gz	examples/input/reads/HSM67VDP_R2.fastq.gz
+HSM6XRSI	examples/input/reads/HSM6XRSI_R1.fastq.gz	examples/input/reads/HSM6XRSI_R2.fastq.gz
+MSM79HCG	examples/input/reads/MSM79HCG_R1.fastq.gz	examples/input/reads/MSM79HCG_R2.fastq.gz
+PSM6XBW3	examples/input/reads/PSM6XBW3_R1.fastq.gz	examples/input/reads/PSM6XBW3_R2.fastq.gz
+PSM7J1A2	examples/input/reads/PSM7J1A2_R1.fastq.gz	examples/input/reads/PSM7J1A2_R2.fastq.gz
+MSM79HCI	examples/input/reads/MSM79HCI_R1.fastq.gz	examples/input/reads/MSM79HCI_R2.fastq.gz

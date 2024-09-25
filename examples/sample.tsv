@@ -1,7 +1,0 @@
-mgen	preprocessing	r1_path	r2_path
-HSM67VDP	hfilt.dedup.deadapt.qtrim	raw_reads/HSM67VDP_R1.fastq.gz	raw_reads/HSM67VDP_R2.fastq.gz
-HSM6XRSI	hfilt.dedup.deadapt.qtrim	raw_reads/HSM6XRSI_R1.fastq.gz	raw_reads/HSM6XRSI_R2.fastq.gz
-MSM79HCG	hfilt.dedup.deadapt.qtrim	raw_reads/MSM79HCG_R1.fastq.gz	raw_reads/MSM79HCG_R2.fastq.gz
-PSM6XBW3	hfilt.dedup.deadapt.qtrim	raw_reads/PSM6XBW3_R1.fastq.gz	raw_reads/PSM6XBW3_R2.fastq.gz
-PSM7J1A2	hfilt.dedup.deadapt.qtrim	raw_reads/PSM7J1A2_R1.fastq.gz	raw_reads/PSM7J1A2_R2.fastq.gz
-MSM79HCI	hfilt.dedup.deadapt.qtrim	raw_reads/MSM79HCI_R1.fastq.gz	raw_reads/MSM79HCI_R2.fastq.gz
