@@ -1,7 +1,7 @@
 outdir: 'examples/example1/results'
 sample_manifest_path: 'examples/example1/sample.tsv'
 species_list_path: 'examples/example1/species.list'
-species_gene_path: 'examples/ref/species_gene.tsv'
+species_gene_path: 'examples/example1/species_gene.tsv'
 host_bt2_index_stem: 'examples/ref/GRCh38.bt2.d/GRCh38'
 illumina_adapters_fasta_path: 'examples/ref/illumina_adapters.fa'
 midasdb_dir: 'examples/ref/midasdb_uhgg.d'
