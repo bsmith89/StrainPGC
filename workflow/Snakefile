@@ -4,15 +4,8 @@ import pandas as pd
 import os.path
 
 
-def prefix_workdir(path):
-    return os.path.join(config["outdir"], path)
-
-
-integer_wc = '[0-9]+'
-
-
 snakemake.utils.min_version("8.20")
-
+include: "rules/common.smk"
 # Config  # Should go in config.yaml
 
 
@@ -20,6 +13,8 @@ snakemake.utils.min_version("8.20")
 # This is all of the default config values, and does not include any data-specific
 # configuration.
 configfile: "workflow/config.yaml"
+if config['container']['default']:
+    container: config['container']['default']
 
 
 ### Main singularity image
@@ -54,8 +49,6 @@ configfile: "workflow/config.yaml"
 config["samples"] = pd.read_table(config["sample_manifest_path"], index_col="mgen")
 config["all_samples"] = config["samples"].index
 
-print(config)
-
 
 # Pre-processing Metagenomes
 ## Link input reads
@@ -64,7 +57,7 @@ rule symlink_input_reads:
         r1=prefix_workdir("reads/{mgen}/preprocess/r1.fq.gz"),
         r2=prefix_workdir("reads/{mgen}/preprocess/r2.fq.gz"),
     input:
-        r1=lambda w: config["samples"].loc[w.mgen]["r1_path"],  # FIXME: Construct this metadata as part of config.
+        r1=lambda w: config["samples"].loc[w.mgen]["r1_path"],
         r2=lambda w: config["samples"].loc[w.mgen]["r2_path"],
     shell:
         """
@@ -79,10 +72,10 @@ rule filter_out_human_reads:
         r1=prefix_workdir("reads/{mgen}/preprocess/r1{stem}hfilt.fq.gz"),
         r2=prefix_workdir("reads/{mgen}/preprocess/r2{stem}hfilt.fq.gz"),
     input:
-        script="workflow/scripts/filter_out_mapping_reads.sh",  # FIXME
+        script="workflow/scripts/filter_out_mapping_reads.sh",
         r1=prefix_workdir("reads/{mgen}/preprocess/r1{stem}fq.gz"),
         r2=prefix_workdir("reads/{mgen}/preprocess/r2{stem}fq.gz"),
-        index=[
+        bt2_index=[
             config['host_bt2_index_stem'] + suffix for suffix in [".1.bt2",
             ".2.bt2",
             ".3.bt2",
@@ -91,13 +84,14 @@ rule filter_out_human_reads:
             ".rev.2.bt2",]
         ],
     params:
-        index=config['host_bt2_index_stem'],
+        # index=config['host_bt2_index_stem'],
+        bt2_index_name=lambda w, input: os.path.splitext(input.bt2_index[0])[0],
     threads: 8
     resources:
         mem_mb=10_000,
     shell:
         """
-        {input.script} {threads} {params.index} {input.r1} {input.r2} {output.r1} {output.r2}
+        {input.script} {threads} {params.bt2_index_name} {input.r1} {input.r2} {output.r1} {output.r2}
         """
 
 
@@ -107,7 +101,7 @@ rule deduplicate_reads:
         r1=temp(prefix_workdir("reads/{mgen}/preprocess/r1{stem}dedup.fq.gz")),
         r2=temp(prefix_workdir("reads/{mgen}/preprocess/r2{stem}dedup.fq.gz")),
     input:
-        script="workflow/scripts/fastuniq_wrapper.sh",  # FIXME
+        script="workflow/scripts/fastuniq_wrapper.sh",
         r1=prefix_workdir("reads/{mgen}/preprocess/r1{stem}fq.gz"),
         r2=prefix_workdir("reads/{mgen}/preprocess/r2{stem}fq.gz"),
     resources:
@@ -311,7 +305,7 @@ rule merge_and_aggregate_pangenome_profiles:
         args=expand(
             "{mgen}="
             + prefix_workdir(
-                "/reads/{mgen}/midas/pangenome_profile_raw.gene_mapping_tally.tsv.lz4"
+                "reads/{mgen}/midas/pangenome_profile_raw.gene_mapping_tally.tsv.lz4"
             ),
             mgen=config["all_samples"],
         ),
@@ -360,7 +354,7 @@ rule gtpro_finish_processing_reads:
     container:
         config["container"]["gtpro"]
     shell:
-        "false  # FIXME"
+        "false  # FIXME: Run gtpro finalize"
 
 
 ## Merge
@@ -537,7 +531,6 @@ rule write_species_genes_list:
         awk '$2=="{wildcards.species}" {{print $1}}' < {input} > {output}
         """
 
-
 ## Run
 rule run_spgc:
     output:
@@ -572,11 +565,11 @@ rule run_spgc:
 
 
 ## Write Gene Content
-rule output_spgc_gene_content:
+rule dump_spgc_gene_content:
     output:
         prefix_workdir("species/{species}/spgc.gene.tsv"),
     input:
-        script="workflow/scripts/extract_strain_gene_hits_from_spgc_netcdf.py",  # FIXME: Is there a "dump" subcommand?
+        script="workflow/scripts/extract_strain_gene_hits_from_spgc_netcdf.py",  # TODO: Is there a "dump" subcommand?
         spgc=prefix_workdir("species/{species}/spgc/spgc.results.nc"),
     conda:
         "envs/spgc.yaml"
@@ -587,9 +580,9 @@ rule output_spgc_gene_content:
 ## Aggregate metagenotype
 rule aggregate_strain_metagenotype:
     output:
-        prefix_workdir("species/{species}/snv_counts.strain.mgtp.nc"),
+        prefix_workdir("species/{species}/snv_counts.strain_pure.mgtp.nc"),
     input:
-        script="scripts/aggregate_strain_metagenotypes_across_strain_samples.py",
+        script="workflow/scripts/aggregate_strain_metagenotypes_across_strain_samples.py",
         mgtp=prefix_workdir("species/{species}/sfacts/snv_counts.mgtp.nc"),
         mapping=prefix_workdir("species/{species}/spgc/strain_pure_samples.tsv"),
     conda:
@@ -608,10 +601,26 @@ rule compile_spgc_strain_summary:
         script="workflow/scripts/compile_spgc_results_metadata.py",
         # TODO: Take genotype QC and metadata from a purpose-built script.
         agg_mgtp=prefix_workdir("species/{species}/snv_counts.strain_pure.mgtp.nc"),
-        spgc=prefix_workdir("species/{species}/spgc.results.nc"),
+        spgc=prefix_workdir("species/{species}/spgc/spgc.results.nc"),
     params:
         ambig_thresh=0.1,
     conda:
         "envs/toolz5.yaml"
     shell:
         "{input.script} {input.spgc} {input.agg_mgtp} {params.ambig_thresh} {output}"
+
+
+# Summarize Workflow
+rule summarize_workflow:
+    output:
+        dot="filegraph.dot",
+        pdf="filegraph.pdf",
+    input:
+        "workflow/Snakefile",
+        "config.yaml",
+    params:
+        targets=[prefix_workdir(f) for f in config['target_all_noprefix']],
+    shell:
+        """
+        snakemake --filegraph --configfile config.yaml -n {config[target_all_noprefix]} | sed '1,2d' | tee {output.dot} | dot -Tpdf > {output.pdf}
+        """
