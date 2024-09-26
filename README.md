@@ -197,3 +197,13 @@ For now, please cite the BioRxiv preprint: https://doi.org/10.1101/2024.04.10.58
 
 A Zenodo DOI for this software repository will also be available in the near
 future.
+
+
+## StrainPGC Development
+
+### Building Docker Image
+
+```
+docker build -t bsmith89/strainpgc-wf -t bsmith89/strainpgc-wf:latest -f workflow/envs/Dockerfile .
+docker push bsmith89/strainpgc-wf
+```
