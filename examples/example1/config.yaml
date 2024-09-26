@@ -1,4 +1,4 @@
-outdir: ''
+outdir: 'results'
 sample_manifest_path: 'sample.tsv'
 species_list_path: 'species.list'
 species_gene_path: 'species_gene.tsv'

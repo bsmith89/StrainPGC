@@ -2,4 +2,5 @@
 __pycache__
 examples/input
 examples/ref
+examples/example1/results
 .snakemake

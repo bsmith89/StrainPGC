@@ -17,6 +17,10 @@ if config['container']['default']:
     container: config['container']['default']
 
 
+rule all:
+    input:
+        targets=[prefix_workdir(f) for f in config['target_all_noprefix']],
+
 ### Main singularity image
 ### GT-Pro singularity image
 ## Dataset config
@@ -618,9 +622,7 @@ rule summarize_workflow:
     input:
         "workflow/Snakefile",
         "config.yaml",
-    params:
-        targets=[prefix_workdir(f) for f in config['target_all_noprefix']],
     shell:
         """
-        snakemake --filegraph --configfile config.yaml -n {config[target_all_noprefix]} | sed '1,2d' | tee {output.dot} | dot -Tpdf > {output.pdf}
+        snakemake --filegraph --configfile config.yaml -n all | sed '1,2d' | tee {output.dot} | dot -Tpdf > {output.pdf}
         """
