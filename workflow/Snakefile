@@ -5,7 +5,11 @@ import os.path
 
 
 snakemake.utils.min_version("8.20")
+
+
 include: "rules/common.smk"
+
+
 # Config  # Should go in config.yaml
 
 
@@ -20,7 +24,8 @@ container: config["container"]
 
 rule all:
     input:
-        targets=[prefix_workdir(f) for f in config['target_all_noprefix']],
+        targets=[prefix_workdir(f) for f in config["target_all_noprefix"]],
+
 
 ### Main singularity image
 ### GT-Pro singularity image
@@ -81,12 +86,15 @@ rule filter_out_human_reads:
         r1=prefix_workdir("reads/{mgen}/preprocess/r1{stem}fq.gz"),
         r2=prefix_workdir("reads/{mgen}/preprocess/r2{stem}fq.gz"),
         bt2_index=[
-            config['host_bt2_index_stem'] + suffix for suffix in [".1.bt2",
-            ".2.bt2",
-            ".3.bt2",
-            ".4.bt2",
-            ".rev.1.bt2",
-            ".rev.2.bt2",]
+            config["host_bt2_index_stem"] + suffix
+            for suffix in [
+                ".1.bt2",
+                ".2.bt2",
+                ".3.bt2",
+                ".4.bt2",
+                ".rev.1.bt2",
+                ".rev.2.bt2",
+            ]
         ],
     params:
         # index=config['host_bt2_index_stem'],
@@ -472,7 +480,7 @@ rule fit_sfacts:
         ),
     input:
         mgen=prefix_workdir("species/{species}/sfacts/{stem}.mgtp.nc"),
-        strategy=config['sfacts_strategy_path'],
+        strategy=config["sfacts_strategy_path"],
     params:
         strain_exponent=lambda w: float(w.strain_exponent) / 100,
         seed=lambda w: int(w.seed),
@@ -533,6 +541,7 @@ rule write_species_genes_list:
         """
         awk '$2=="{wildcards.species}" {{print $1}}' < {input} > {output}
         """
+
 
 ## Run
 rule run_spgc:
