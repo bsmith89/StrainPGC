@@ -1,3 +1,1 @@
-container:
-  default: 'docker://condaforge/mambaforge:24.7.1-0'
-  gtpro: 'docker://bsmith89/gtpro:522c78fdbd1524580c636956a4cb5b1dc268d022'
+container: 'bsmith89/strainpgc-wf:latest'

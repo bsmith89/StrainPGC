@@ -13,8 +13,9 @@ include: "rules/common.smk"
 # This is all of the default config values, and does not include any data-specific
 # configuration.
 configfile: "workflow/config.yaml"
-if config['container']['default']:
-    container: config['container']['default']
+
+
+container: config["container"]
 
 
 rule all:
