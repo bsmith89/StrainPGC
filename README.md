@@ -54,26 +54,63 @@ This will also install all Python software dependencies, which currently include
 - netcdf4
 - scipy
 
-### Basic Usage
+It is recommended to install StrainPGC in an isolated Python environment (e.g. using conda).
 
-Example input data are provided for testing and demonstration purposes:
+### Example Data
+
+Examples of the full StrainPGC-wf workflow and input data for the core `spgc` tool
+are provided for testing and demonstration purposes:
+
+
+#### Core Tool
 
 With correctly formatted input data, StrainPGC method is run as follows:
 
 ```
 spgc run \
-    example_data/100035.gene_depth.tsv.gz \
-    example_data/100035.core_gene.list \
-    example_data/100035.strain_map.tsv \
-    example_data/100035.spgc.tsv
+    examples/example1/results/species/102506/midas/pangenome_profile.depth.tsv.bz2 \
+    examples/example1/results/species/102506/spgc/species_genes.list \
+    examples/example1/results/species/102506/spgc/strain_pure_samples.tsv \
+    examples/example1/results/species/102506/spgc/spgc.results.nc
 ```
 
-where `example_data/100035.spgc.tsv` is the desired output path.
+where `*/spgc.results.nc` is a NetCDF formatted output.
 
-Additional options are described in the help:
+Additional subcommands and options options are described in the help:
 
 ```
+spgc --help
 spgc run --help
+```
+
+#### StrainPGC-wf
+
+A complete StrainPGC workflow going from raw input reads to estimated gene
+content is implemented using Snakemake (see workflow/Snakefile) and
+incorporates metagenome preprocessing, MIDAS, GT-Pro, and StrainFacts.
+
+After install Snakemake you must download and prepare the auxiliary reference
+data as follows:
+
+```
+bash examples/download_example1_reads.sh examples/input/reads
+bash examples/download_grch38.sh examples/ref
+bash examples/download_illumina_adapters.sh examples/ref
+bash examples/download_gtpro_refs.sh examples/ref
+```
+
+You can then navigate to the example project root and run the complete
+workflow as follows:
+
+```
+cd examples/example1
+
+species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
+num_procs=12  # Number of processes
+
+snakemake --configfile config.yaml --use-conda -j "$num_procs" \
+        "results/species/$species/spgc.strain.tsv" \
+        "results/species/$species/spgc.gene.tsv"
 ```
 
 ## Inputs
@@ -113,7 +150,7 @@ which captures metagenotypes across polymorphic positions found in the
 ### Pangenome Profiling
 
 The StrainPGC workflow implements pangenome profiling against the
-(MIDAS2 UHGG reference database)[https://github.com/czbiohub-sf/MIDAS2] gene
+(MIDAS UHGG reference database)[https://github.com/czbiohub-sf/MIDAS] gene
 clusters using using Bowtie2-based read mapping.
 
 While other profiling tools may be used, excessive post-hoc filtering
@@ -141,6 +178,9 @@ post-hoc based on
 
 Strains failing these two checks should be removed from downstream analyses.
 
+In addition, for the StrainPGC manuscript, we removed strains with fewer
+than 100 positions confidently genotyped after StrainFacts partitioning.
+
 ### Additional utilities
 
 Tools are included with StrainPGC for several auxiliary purposes:
@@ -153,7 +193,7 @@ Tools are included with StrainPGC for several auxiliary purposes:
 
 ## Citation
 
-For now, please cite this repository directly.
-A Zenodo DOI will be available in the near future as well as a BioRxiv
-preprint.
+For now, please cite the BioRxiv preprint: https://doi.org/10.1101/2024.04.10.588779
 
+A Zenodo DOI for this software repository will also be available in the near
+future.

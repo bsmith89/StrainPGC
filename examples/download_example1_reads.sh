@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-outdir="examples/input/reads"
+outdir="$1"
 sample_list="HSM67VDP HSM6XRSI PSM6XBW3 PSM7J1A2 MSM79HCG MSM79HCI"
 
 mkdir -p $outdir && cd $outdir

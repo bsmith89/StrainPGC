@@ -205,7 +205,7 @@ rule build_midas_pangenomes_bowtie_index:
         midasdb_name="uhgg",
         midasdb_dir=config["midasdb_dir"],
     conda:
-        "envs/midas3.yaml"
+        "envs/midas.yaml"
     threads: 96
     resources:
         mem_mb=480_000,
@@ -241,7 +241,7 @@ rule run_midas_genes_align_only:
         midasdb_dir=config["midasdb_dir"],
         midasdb_name="uhgg",
     conda:
-        "envs/midas3.yaml"
+        "envs/midas.yaml"
     threads: 4
     resources:
         mem_mb=80_000,
@@ -275,7 +275,7 @@ rule midas_profile_genes:
     input:
         prefix_workdir("reads/{mgen}/midas/pangenome_profile_raw.bam"),
     conda:
-        "envs/bowtie2.yaml"
+        "envs/midas.yaml"
     threads: 1
     shell:
         """
@@ -314,8 +314,6 @@ rule merge_and_aggregate_pangenome_profiles:
             mgen=config["all_samples"],
         ),
         agg_col="centroid_{config[pangenome_profiling_agg_level]}",
-    conda:
-        "envs/toolz.yaml"
     threads: 1
     resources:
         mem_mb=20_000,
@@ -553,7 +551,7 @@ rule run_spgc:
         depth_ratio_thresh=0.2,
         corr_thresh=0.4,
     conda:
-        "envs/toolz4.yaml"
+        "envs/spgc.yaml"
     shell:
         """
         spgc run --full-output \
@@ -609,7 +607,7 @@ rule compile_spgc_strain_summary:
     params:
         ambig_thresh=0.1,
     conda:
-        "envs/toolz5.yaml"
+        "envs/spgc.yaml"
     shell:
         "{input.script} {input.spgc} {input.agg_mgtp} {params.ambig_thresh} {output}"
 

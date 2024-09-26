@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-outdir="examples/ref/GRCh38.bt2.d"
+outdir="$1"
 stem="GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.bowtie_index"
 
 mkdir -p $outdir && cd $outdir

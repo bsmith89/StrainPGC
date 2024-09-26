@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-outdir="examples/ref/gtpro"
+outdir="$1"
 
 mkdir -p $outdir && cd $outdir
 curl -O http://jason.shi-bucket.s3.amazonaws.com/public/20190723_881species_optimized_db_kmer_index.bin
