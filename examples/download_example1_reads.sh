@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
+outdir="examples/input/reads"
 sample_list="HSM67VDP HSM6XRSI PSM6XBW3 PSM7J1A2 MSM79HCG MSM79HCI"
-dir="examples/input/reads"
 
-mkdir -p $dir && cd $dir
+mkdir -p $outdir && cd $outdir
 for sample in $sample_list
 do
     echo $sample
