@@ -30,11 +30,15 @@ rule all:
 
 
 rule start_shell:
-    shell: "bash"
+    shell:
+        "bash"
+
 
 rule start_shell_gtpro:
-    container: config['gtpro_container']
-    shell: "bash"
+    container:
+        config["gtpro_container"]
+    shell:
+        "bash"
 
 
 # Metadata  # Paths to metadata files should go in project specific config.yaml?
@@ -82,7 +86,7 @@ rule filter_out_human_reads:
             ]
         ],
     params:
-        bt2_index_name=config['host_bt2_index_stem'],
+        bt2_index_name=config["host_bt2_index_stem"],
         # bt2_index_name=lambda w, input: os.path.splitext(input.bt2_index[0])[0],
     threads: 8
     resources:
@@ -327,7 +331,7 @@ rule run_gtpro:
         db_name=config["gtpro_ref_name"],
     threads: 8
     container:
-        config['gtpro_container']  # NOTE (2024-09-26): There seems to be a unresolved bug with GT-Pro containers built using g++ v9.4.0.  See https://github.com/zjshi/gt-pro/issues/48
+        config["gtpro_container"]  # NOTE (2024-09-26): There seems to be a unresolved bug with GT-Pro containers built using g++ v9.4.0.  See https://github.com/zjshi/gt-pro/issues/48
     resources:
         mem_mb=10_000,
     shell:
@@ -343,7 +347,9 @@ rule gtpro_finish_processing_reads:
         temp(prefix_workdir("reads/{mgen}/gtpro/{r}.snv_counts.tsv.bz2")),
     input:
         raw=prefix_workdir("reads/{mgen}/gtpro/{r}.snv_counts_raw.gz"),
-        db=os.path.join(config['gtpro_ref_dir'], 'variants_main.covered.hq.snp_dict.tsv'),
+        db=os.path.join(
+            config["gtpro_ref_dir"], "variants_main.covered.hq.snp_dict.tsv"
+        ),
     # container:  # NOTE (2024-09-26): Does not require the GT-Pro container because it's just a python script.
     #     config['gtpro_container']
     shell:

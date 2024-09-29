@@ -34,7 +34,22 @@ if __name__ == "__main__":
                 lambda x: x.species == species
             ]
             sample_data.append(read_data)
-        sample_data = pd.concat(sample_data).groupby(['species', 'global_pos', 'contig', 'local_pos', 'ref_allele', 'alt_allele']).sum().reset_index().assign(sample=sample)
+        sample_data = (
+            pd.concat(sample_data)
+            .groupby(
+                [
+                    "species",
+                    "global_pos",
+                    "contig",
+                    "local_pos",
+                    "ref_allele",
+                    "alt_allele",
+                ]
+            )
+            .sum()
+            .reset_index()
+            .assign(sample=sample)
+        )
         all_data.append(sample_data)
     all_data = pd.concat(all_data)
     all_data[

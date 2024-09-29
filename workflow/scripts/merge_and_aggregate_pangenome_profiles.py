@@ -14,6 +14,7 @@ def info(*msg, **kwargs):
     now = datetime.now()
     print(f"[{now}]", *msg, file=sys.stderr, flush=True, **kwargs)
 
+
 def read_table_bz2_filter(path, filt, *args, **kwargs):
     buff = StringIO()
     with subprocess.Popen(["bzip2", "-dc", path], stdout=subprocess.PIPE) as proc:
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     sample_paths = dict((arg.split("=", maxsplit=1) for arg in sys.argv[4:]))
 
     info("Loading gene info.")
-    gene_info = pd.read_table(genes_info_path).set_index('centroid_99', drop=False)
+    gene_info = pd.read_table(genes_info_path).set_index("centroid_99", drop=False)
     gene_groupby = gene_info[groupby_col]
     info("Loading gene lengths.")
     gene_len = gene_info.centroid_99_gene_length
@@ -56,7 +57,9 @@ if __name__ == "__main__":
         d = d.groupby(gene_groupby.loc[sample_gene_list]).sum()
         d = d.reindex(output_gene_list, fill_value=0)
         data[i] = d.values
-    data = pd.DataFrame(data, index=list(sample_paths), columns=output_gene_list).rename_axis(index="sample", columns="gene_id")
+    data = pd.DataFrame(
+        data, index=list(sample_paths), columns=output_gene_list
+    ).rename_axis(index="sample", columns="gene_id")
 
     info("Writing output.")
-    data.T.rename_axis(index='gene').to_csv(outpath, sep='\t')
+    data.T.rename_axis(index="gene").to_csv(outpath, sep="\t")
