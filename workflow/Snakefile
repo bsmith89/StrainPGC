@@ -14,12 +14,14 @@ include: "rules/common.smk"
 
 
 ## Workflow config.
+
+
 # This is all of the default config values, and does not include any data-specific
 # configuration.
 configfile: "workflow/config.yaml"
 
 
-container: config["container"]
+container: config["main_container"]
 
 
 rule all:
@@ -27,34 +29,17 @@ rule all:
         targets=[prefix_workdir(f) for f in config["target_all_noprefix"]],
 
 
-### Main singularity image
-### GT-Pro singularity image
-## Dataset config
-### Path to host bowtie2 index
-### Path to Illumina adapters
-### Path to MIDASDB
-## Run parameters
-### Preprocesing infix (e.g. hfilt.dedup.deadapt.qtrim}
-### Strain-tracking
-#### Metagenotype filtering params
-##### Coverage across samples
-##### Minor allele frequency
-#### Metagenotype subsampling params
-##### Number of positions
-#### StrainFacts model-fitting params
-#### Strain purity
-##### Strategy
-### Pangenome profiling
-#### Bowtie2 params
-#### Aggregation centroid
-### StrainPGC
-#### Depth transformation exponent
-#### Correlation threshold
-#### Depth-ratio threshold
+rule start_shell:
+    shell: "bash"
+
+rule start_shell_gtpro:
+    container: config['gtpro_container']
+    shell: "bash"
+
 
 # Metadata  # Paths to metadata files should go in project specific config.yaml?
-## Load species list
-## Load species genes list?
+
+
 ## Load metagenome paths
 config["samples"] = pd.read_table(config["sample_manifest_path"], index_col="mgen")
 config["all_samples"] = config["samples"].index
@@ -97,8 +82,8 @@ rule filter_out_human_reads:
             ]
         ],
     params:
-        # index=config['host_bt2_index_stem'],
-        bt2_index_name=lambda w, input: os.path.splitext(input.bt2_index[0])[0],
+        bt2_index_name=config['host_bt2_index_stem'],
+        # bt2_index_name=lambda w, input: os.path.splitext(input.bt2_index[0])[0],
     threads: 8
     resources:
         mem_mb=10_000,
@@ -175,31 +160,32 @@ rule alias_preprocessed_reads:
 
 # MIDAS and Pangenome Profiling
 ## Initialize MIDASDB locally
-rule download_midasdb_for_species:
+rule initialize_midasdb_for_species_list:
     output:
         flag=prefix_workdir("midasdb_initialized.flag"),
     input:
         species_list=config["species_list_path"],
     params:
-        dir=config["midasdb_dir"],
-    conda:
-        "envs/midas.yaml"
+        midasdb_dir=config["midasdb_dir"],
+    threads: 8
     shell:
         """
-        false  # FIXME: midas downloaddb; Figure out how to reliable download all species.
+        midas database --species_list {input.species_list} --num_cores {threads} --download --midasdb_dir {params.midasdb_dir}
+        midas prune_centroids --species $(tr '\\n' ',' < {input.species_list} | sed 's:,$::') --midasdb_dir {params.midasdb_dir} --midasdb_name localdb -t {threads} --prune_method median --prune_cutoff 0.4 --remove_singleton --debug --force
+        touch {output}
         """
 
 
 rule symlink_midasdb_gene_metadata:
     output:
-        prefix_workdir("species/{species}/midas/genes_info.tsv"),
+        prefix_workdir("species/{species}/midas/clusters_99_info.tsv"),
     input:
         prefix_workdir("midasdb_initialized.flag"),
     params:
         dir=config["midasdb_dir"],
     shell:
         """
-        ln -rs $(realpath {params.dir}/pangenomes/{wildcards.species}/genes_info.tsv") {output}
+        ln -rs $(realpath "{params.dir}/pangenomes/{wildcards.species}/clusters_99_info.tsv") {output}
         """
 
 
@@ -213,30 +199,29 @@ rule build_midas_pangenomes_bowtie_index:
     params:
         midasdb_name="uhgg",
         midasdb_dir=config["midasdb_dir"],
-    conda:
-        "envs/midas.yaml"
-    threads: 96
+    threads: 60
     resources:
-        mem_mb=480_000,
+        mem_mb=100_000,
     shell:
         """
-        midas2 build_bowtie2db \
+        midas build_bowtie2db \
+                --debug \
                 --bt2_indexes_dir {output.dir} \
                 --bt2_indexes_name pangenomes \
                 --midasdb_name {params.midasdb_name} \
                 --midasdb_dir {params.midasdb_dir} \
                 --select_threshold=-1 \
                 --species_list {input.species_list} \
-                --num_cores {threads} \
-                --prune_centroids \
-                --remove_singleton
+                --num_cores {threads}
+                # --prune_centroids \
+                # --remove_singleton
         """
 
 
 ## Align
 rule run_midas_genes_align_only:
     output:
-        bam=protected(prefix_workdir("reads/{mgen}/midas/pangenome_profile_raw.bam")),
+        bam=(prefix_workdir("reads/{mgen}/midas/pangenome_profile_raw.bam")),
     input:
         species_list=config["species_list_path"],
         bowtie_indexes=prefix_workdir("pangenomes.bt2.d"),
@@ -249,11 +234,9 @@ rule run_midas_genes_align_only:
         ),
         midasdb_dir=config["midasdb_dir"],
         midasdb_name="uhgg",
-    conda:
-        "envs/midas.yaml"
     threads: 4
     resources:
-        mem_mb=80_000,
+        mem_mb=30_000,
     shell:
         """
         midas run_genes --num_cores {threads} \
@@ -266,7 +249,7 @@ rule run_midas_genes_align_only:
                 --aln_speed sensitive \
                 --aln_extra_flags '--mm --ignore-quals' \
                 --total_depth 0 \
-                --cluster_level 75 \
+                --cluster_level 99 \
                 --alignment_only \
                 {params.outdir}
         ln {params.outbam} {output.bam}
@@ -283,8 +266,6 @@ rule midas_profile_genes:
         ),
     input:
         prefix_workdir("reads/{mgen}/midas/pangenome_profile_raw.bam"),
-    conda:
-        "envs/midas.yaml"
     threads: 1
     shell:
         """
@@ -313,16 +294,16 @@ rule merge_and_aggregate_pangenome_profiles:
             ),
             mgen=config["all_samples"],
         ),
-        gene_info=prefix_workdir("species/{species}/midas/genes_info.tsv"),
+        gene_info=prefix_workdir("species/{species}/midas/clusters_99_info.tsv"),
     params:
         args=expand(
             "{mgen}="
             + prefix_workdir(
-                "reads/{mgen}/midas/pangenome_profile_raw.gene_mapping_tally.tsv.lz4"
+                "reads/{mgen}/midas/pangenome_profile_raw.gene_mapping_tally.tsv.bz2"
             ),
             mgen=config["all_samples"],
         ),
-        agg_col="centroid_{config[pangenome_profiling_agg_level]}",
+        agg_col="centroid_" + config["pangenome_profiling_agg_level"],
     threads: 1
     resources:
         mem_mb=20_000,
@@ -336,7 +317,7 @@ rule merge_and_aggregate_pangenome_profiles:
 ## Run core algorithm
 rule run_gtpro:
     output:
-        temp(prefix_workdir("reads/{mgen}/gtpro/{r}.snv_counts_raw.bz2")),
+        temp(prefix_workdir("reads/{mgen}/gtpro/{r}.snv_counts_raw.gz")),
     input:
         r=prefix_workdir("reads/{mgen}/preprocess/{r}.proc.fq.gz"),
         db=config["gtpro_ref_dir"],
@@ -345,14 +326,14 @@ rule run_gtpro:
         db_m=36,
         db_name=config["gtpro_ref_name"],
     threads: 8
+    container:
+        config['gtpro_container']  # NOTE (2024-09-26): There seems to be a unresolved bug with GT-Pro containers built using g++ v9.4.0.  See https://github.com/zjshi/gt-pro/issues/48
     resources:
         mem_mb=10_000,
-    container:
-        config["container"]["gtpro"]
     shell:
         """
-        gzip -cd {input.r} | GT_Pro genotype -t {threads} -l {params.db_l} -m {params.db_m} -d {params.db_name} | bzip2 -c > {output}.temp
-        mv {output}.temp {output}
+        GT_Pro genotype -t {threads} -l {params.db_l} -m {params.db_m} -d {params.db_name} -o {output}.temp {input.r}
+        mv {output}.temp.tsv.gz {output}
         """
 
 
@@ -361,19 +342,20 @@ rule gtpro_finish_processing_reads:
     output:
         temp(prefix_workdir("reads/{mgen}/gtpro/{r}.snv_counts.tsv.bz2")),
     input:
-        prefix_workdir("reads/{mgen}/gtpro/{r}.snv_counts_raw.bz2"),
-    container:
-        config["container"]["gtpro"]
+        raw=prefix_workdir("reads/{mgen}/gtpro/{r}.snv_counts_raw.gz"),
+        db=os.path.join(config['gtpro_ref_dir'], 'variants_main.covered.hq.snp_dict.tsv'),
+    # container:  # NOTE (2024-09-26): Does not require the GT-Pro container because it's just a python script.
+    #     config['gtpro_container']
     shell:
-        "false  # FIXME: Run gtpro finalize"
+        "GT_Pro parse --dict {input.db} --in <(zcat {input.raw}) --out >(bzip2 -c > {output})"
 
 
 ## Merge
-rule merge_gtpro_counts:
+rule merge_gtpro_counts_for_species:
     output:
         temp(prefix_workdir("species/{species}/gtpro/snv_counts.tsv.bz2")),
     input:
-        script="workflow/scripts/merge_gtpro_counts.py",  # FIXME: Write this script
+        script="workflow/scripts/merge_gtpro_counts_for_species.py",  # FIXME: Write this script
         r1=expand(
             prefix_workdir("reads/{mgen}/gtpro/r1.snv_counts.tsv.bz2"),
             mgen=config["all_samples"],
@@ -405,8 +387,6 @@ rule load_metagenotype_from_merged_gtpro:
         prefix_workdir("species/{species}/sfacts/snv_counts.mgtp.nc"),
     input:
         prefix_workdir("species/{species}/gtpro/snv_counts.tsv.bz2"),
-    conda:
-        "envs/sfacts.yaml"
     shell:
         """
         sfacts load --gtpro-metagenotype {input} {output}
@@ -429,8 +409,6 @@ rule filter_metagenotype:
     params:
         poly=lambda w: float(w.poly) / 100,
         cvrg=lambda w: float(w.cvrg) / 100,
-    conda:
-        "envs/sfacts.yaml"
     resources:
         mem_mb=12_000,
     shell:
@@ -456,8 +434,6 @@ rule subset_metagenotype:
         seed=lambda w: int(w.seed),
         num_positions=lambda w: int(w.num_positions),
         block_number=lambda w: int(w.block_number),
-    conda:
-        "envs/sfacts.yaml"
     shell:
         """
         sfacts sample_mgen \
@@ -486,8 +462,6 @@ rule fit_sfacts:
         seed=lambda w: int(w.seed),
     resources:
         mem_mb=5_000,
-    conda:
-        "envs/sfacts.yaml"
     shell:
         """
         sfacts fit \
@@ -506,8 +480,6 @@ rule export_sfacts_comm:
         "{stem}.strain_composition.tsv",
     input:
         "{stem}.sfacts-fit.nc",
-    conda:
-        "envs/sfacts.yaml"
     shell:
         """
         sfacts dump --community {output} {input}
@@ -560,8 +532,6 @@ rule run_spgc:
         species_free_thresh=1e-4,
         depth_ratio_thresh=0.2,
         corr_thresh=0.4,
-    conda:
-        "envs/spgc.yaml"
     shell:
         """
         spgc run --full-output \
@@ -583,8 +553,6 @@ rule dump_spgc_gene_content:
     input:
         script="workflow/scripts/extract_strain_gene_hits_from_spgc_netcdf.py",  # TODO: Is there a "dump" subcommand?
         spgc=prefix_workdir("species/{species}/spgc/spgc.results.nc"),
-    conda:
-        "envs/spgc.yaml"
     shell:
         "{input.script} {input.spgc} {output}"
 
@@ -597,8 +565,6 @@ rule aggregate_strain_metagenotype:
         script="workflow/scripts/aggregate_strain_metagenotypes_across_strain_samples.py",
         mgtp=prefix_workdir("species/{species}/sfacts/snv_counts.mgtp.nc"),
         mapping=prefix_workdir("species/{species}/spgc/strain_pure_samples.tsv"),
-    conda:
-        "envs/sfacts.yaml"
     resources:
         mem_mb=10_000,
     shell:
@@ -616,8 +582,6 @@ rule compile_spgc_strain_summary:
         spgc=prefix_workdir("species/{species}/spgc/spgc.results.nc"),
     params:
         ambig_thresh=0.1,
-    conda:
-        "envs/spgc.yaml"
     shell:
         "{input.script} {input.spgc} {input.agg_mgtp} {params.ambig_thresh} {output}"
 

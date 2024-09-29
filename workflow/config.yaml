@@ -1,1 +1,1 @@
-container: 'bsmith89/strainpgc-wf:latest'
+container: 'docker://bsmith89/strainpgc-wf:latest'

@@ -1,4 +1,6 @@
 outdir: 'results'
+main_container: 'docker://bsmith89/strainpgc-wf@sha256:6ebdae13aba9cd6282263e9f14f6254f34d23f9ad94146e0d3c98ed6efc06e77'
+gtpro_container: 'docker://bsmith89/gtpro@sha256:dedf350917364f7c3018124fdb9840fdbb188700b216a42acf54d194e14b2df3'
 sample_manifest_path: 'sample.tsv'
 species_list_path: 'species.list'
 species_gene_path: 'species_gene.tsv'
@@ -6,10 +8,9 @@ host_bt2_index_stem: '../ref/GRCh38.bt2.d/GRCh38'
 illumina_adapters_fasta_path: '../ref/illumina_adapters.fa'
 midasdb_dir: '../ref/midasdb_uhgg.d'
 preprocessing_infix: 'hfilt.dedup.deadapt.qtrim'
-sfacts_infix: 'filt-poly05-cvrg05.ss-g1000-block0-seed0.sfacts-s85-seed0'
+sfacts_infix: 'filt-poly05-cvrg05.ss-g10000-block0-seed0.sfacts-s85-seed0'
 sfacts_strategy_path: 'sfacts_strategy.args'
 pangenome_profiling_agg_level: '75'
-gtpro_ref_dir: "../ref/gtpro"
-gtpro_ref_name: '../ref/gtpro/20190723_881species'
-
+gtpro_ref_name: "../ref/gtpro/20190723_881species"
+gtpro_ref_dir: '../ref/gtpro'
 target_all_noprefix: ['species/102506/spgc.strain.tsv', 'species/102506/spgc.gene.tsv']

@@ -3,10 +3,28 @@
 # import pandas as pd
 import sys
 import pandas as pd
-from lib.util import info
-from lib.pandas_util import read_table_lz4_filter
 import numpy as np
 from tqdm import tqdm
+from datetime import datetime
+from io import StringIO
+import subprocess
+
+
+def info(*msg, **kwargs):
+    now = datetime.now()
+    print(f"[{now}]", *msg, file=sys.stderr, flush=True, **kwargs)
+
+def read_table_bz2_filter(path, filt, *args, **kwargs):
+    buff = StringIO()
+    with subprocess.Popen(["bzip2", "-dc", path], stdout=subprocess.PIPE) as proc:
+        lines_unfiltered = (line.decode() for line in proc.stdout)
+        lines_filtered = (
+            line for i, line in enumerate(lines_unfiltered) if filt(i, line)
+        )
+        buff.writelines(lines_filtered)
+        buff.seek(0)
+        out = pd.read_table(buff, *args, **kwargs)
+    return out
 
 
 if __name__ == "__main__":
@@ -16,10 +34,10 @@ if __name__ == "__main__":
     sample_paths = dict((arg.split("=", maxsplit=1) for arg in sys.argv[4:]))
 
     info("Loading gene info.")
-    gene_info = pd.read_table(genes_info_path, index_col="gene_id")
+    gene_info = pd.read_table(genes_info_path).set_index('centroid_99', drop=False)
     gene_groupby = gene_info[groupby_col]
     info("Loading gene lengths.")
-    gene_len = gene_info.gene_length
+    gene_len = gene_info.centroid_99_gene_length
 
     info("Pre-calculating gene lists.")
     species_gene_set = set(gene_len.index)
@@ -32,7 +50,7 @@ if __name__ == "__main__":
         _filt = lambda i, s: (i == 0) or (
             s.split(maxsplit=1, sep="\t")[0] in species_gene_set
         )
-        d = read_table_lz4_filter(path, filt=_filt, index_col="gene_id").tally
+        d = read_table_bz2_filter(path, filt=_filt, index_col="gene_id").tally
         sample_gene_list = list(set(d.index) & species_gene_set)
         d = d.loc[sample_gene_list] / gene_len.loc[sample_gene_list]
         d = d.groupby(gene_groupby.loc[sample_gene_list]).sum()
@@ -41,4 +59,4 @@ if __name__ == "__main__":
     data = pd.DataFrame(data, index=list(sample_paths), columns=output_gene_list).rename_axis(index="sample", columns="gene_id")
 
     info("Writing output.")
-    data.stack().to_xarray().to_netcdf(outpath)
+    data.T.rename_axis(index='gene').to_csv(outpath, sep='\t')
