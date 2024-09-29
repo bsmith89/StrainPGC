@@ -1,6 +1,6 @@
 # Requirements for all of my compbio containers.
 #
-FROM condaforge/mambaforge AS compbio
+FROM condaforge/mambaforge:24.7.1-0 AS compbio
 RUN \
     apt-get update \
     && apt-get install -y \
@@ -52,14 +52,23 @@ RUN \
         seqtk \
     && conda clean -afy
 RUN \
-    mamba install -y -c conda-forge -c bioconda -c zhaoc1 \
-        midas \
+    mamba install -y -c pytorch -c nvidia \
+        pytorch-cuda=12.4 \
+        pytorch \
+        torchvision \
+        torchaudio \
     && conda clean -afy
 RUN \
-    pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir git+https://github.com/bsmith89/StrainFacts
+    git clone https://github.com/bsmith89/StrainFacts src/StrainFacts && cd src/StrainFacts \
+    && git reset --hard bd6f3ff3bc7b2b655c4a6843a1edbc6c3c0c28c3 \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install -e .
+RUN \
+    git clone https://github.com/CZBiohub-sf/MIDAS src/MIDAS && cd src/MIDAS \
+    && git reset --hard 8e321ed29080e1ee3138f69e56b033d17d140798 \
+    && pip install -e .
 
+# THIS version of StrainPGC
 ADD . src/StrainPGC/
 RUN \
-    pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir  src/StrainPGC/
+    pip install -e src/StrainPGC/
