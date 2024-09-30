@@ -1,5 +1,5 @@
 outdir: 'results'
-main_container: 'docker://bsmith89/strainpgc-wf@sha256:c41142c509c0d0b3d05d7bc8ce22d61df842a84f3ef30023ce7ab5e9c881b1d9'
+main_container: 'docker://bsmith89/strainpgc-wf@sha256:8967f4fe293334ed9746ba524da6f1c25efd046946593d7fbf2f7ca1f554739b'
 gtpro_container: 'docker://bsmith89/gtpro@sha256:dedf350917364f7c3018124fdb9840fdbb188700b216a42acf54d194e14b2df3'
 sample_manifest_path: 'sample.tsv'
 species_list_path: 'species.list'

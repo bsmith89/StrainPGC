@@ -71,3 +71,8 @@ RUN \
 ADD . src/StrainPGC/
 RUN \
     pip install -e src/StrainPGC/
+
+RUN \
+    mamba install -y -c conda-forge \
+        graphviz \
+    && conda clean -afy
