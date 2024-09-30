@@ -60,15 +60,14 @@ RUN \
     && conda clean -afy
 RUN \
     git clone https://github.com/bsmith89/StrainFacts src/StrainFacts && cd src/StrainFacts \
-    && git reset --hard bd6f3ff3bc7b2b655c4a6843a1edbc6c3c0c28c3 \
+    && git checkout bd6f3ff3bc7b2b655c4a6843a1edbc6c3c0c28c3 \
     && pip install --no-cache-dir --upgrade pip \
     && pip install -e .
 RUN \
     git clone https://github.com/CZBiohub-sf/MIDAS src/MIDAS && cd src/MIDAS \
-    && git reset --hard 8e321ed29080e1ee3138f69e56b033d17d140798 \
+    && git checkout 8e321ed29080e1ee3138f69e56b033d17d140798 \
     && pip install -e .
 
-# THIS version of StrainPGC
 ADD . src/StrainPGC/
 RUN \
     pip install -e src/StrainPGC/
