@@ -1,6 +1,5 @@
 *.egg-info/
 __pycache__
-examples/input
-examples/ref
-examples/example1/results
+examples/wf_example/raw
+examples/wf_example/ref
 .snakemake

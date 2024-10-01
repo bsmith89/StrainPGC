@@ -2,7 +2,118 @@
 
 Strain-informed gene content inference from shotgun metagenomes
 
-## Summary
+## Citation
+
+The StrainPGC manuscript is currently under revisions.
+For now, please cite the [BioRxiv preprint](https://doi.org/10.1101/2024.04.10.588779).
+
+## Quick-start
+
+### Installation
+
+StrainPGC can be installed directly from this code repository using pip:
+
+```
+git clone https://github.com/bsmith89/StrainPGC StrainPGC
+cd StrainPGC
+pip install -e .  # Editable installation for development.
+```
+
+This will also install all Python software dependencies, which currently include:
+
+- pandas
+- xarray
+- netcdf4
+- scipy
+
+It is recommended to install StrainPGC in an isolated Python environment (e.g. a `conda env`).
+
+### The Core Tool
+
+#### Example data
+
+Example input data for the core `spgc` tool are provided for testing and
+demonstration purposes.
+
+These can be downloaded using the included script:
+
+```
+bash examples/download_example_inputs.sh examples/core_example
+```
+
+With correctly formatted input data, StrainPGC method is run (using example data) as follows:
+
+```
+cd examples/core_example
+spgc run \
+    pangenome_profile.depth.tsv.bz2 \
+    species_genes.list \
+    strain_pure_samples.tsv \
+    spgc.results.nc
+spgc dump_genes spgc.results.nc > spgc.gene.tsv
+spgc dump_stats spgc.results.nc > spgc.strain.tsv
+```
+
+where `spgc.results.nc` is an XArray/NetCDF binary format and and `dump_genes` / `dump_stats`
+extract from it gene content and strain statistics, respectively.
+
+Additional subcommands and options options are described in the help:
+
+```
+spgc --help
+spgc run --help
+```
+
+### StrainPGC-wf
+
+A complete StrainPGC workflow going from raw input reads to estimated gene
+content is implemented using Snakemake (see `workflow/Snakefile`) and
+incorporates metagenome preprocessing, MIDAS, GT-Pro, and StrainFacts.
+
+#### Example data
+
+After install Snakemake you must download the auxiliary reference data as
+described above.
+
+```
+bash examples/download_example_reads.sh examples/wf_example/raw
+bash examples/download_grch38.sh examples/wf_example/ref
+bash examples/download_illumina_adapters.sh examples/wf_example/ref
+bash examples/download_gtpro_refs.sh examples/wf_example/ref/gtpro
+```
+
+You can then navigate to the example project root and run the complete
+workflow as follows:
+
+```
+cd examples/wf_example
+
+species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
+num_procs=12  # Number of CPU processes
+
+snakemake --profile profile \
+        -j "$num_procs" \
+        --apptainer-args "/path/to/StrainPGC/repository" \
+        --configfile config.yaml \
+        "results/species/$species/spgc.strain.tsv" \
+        "results/species/$species/spgc.gene.tsv"
+```
+
+The Snakemake profile provided in `examples/wf_example/profile/config.yaml`
+may require customization for your platform.
+
+By default, this workflow implementation capitalizes on Snakemake's Apptainer
+integration to download and run a prebuilt container
+(https://hub.docker.com/r/bsmith89/strainpgc-wf)
+integrating StrainPGC and all other dependencies of the workflow.
+
+## Understanding StrainPGC
+
+
+The motivation and methodological details are fully described, benchmarked, and
+demonstrated in [our manuscript](https://doi.org/10.1101/2024.04.10.588779).
+
+### Summary
 
 Pangenome profiling methods harness shotgun metagenomics to identify gene
 families encoded in the genomes of individual strains.
@@ -34,86 +145,7 @@ multiple samples. Specifically, StrainPGC:
 
 ![StrainPGC Concept Diagram](docs/concept_diagram.svg)
 
-
-## Quick-start
-
-### Installation
-
-Canonically, StrainPGC can be installed directly from this code repository using setuptools/pip:
-
-```
-git clone https://github.com/bsmith89/StrainPGC StrainPGC
-cd StrainPGC
-pip install .
-```
-
-This will also install all Python software dependencies, which currently include:
-
-- pandas
-- xarray
-- netcdf4
-- scipy
-
-It is recommended to install StrainPGC in an isolated Python environment (e.g. using conda).
-
-### Example Data
-
-Examples of the full StrainPGC-wf workflow and input data for the core `spgc` tool
-are provided for testing and demonstration purposes:
-
-
-#### Core Tool
-
-With correctly formatted input data, StrainPGC method is run as follows:
-
-```
-spgc run \
-    examples/example1/results/species/102506/midas/pangenome_profile.depth.tsv.bz2 \
-    examples/example1/results/species/102506/spgc/species_genes.list \
-    examples/example1/results/species/102506/spgc/strain_pure_samples.tsv \
-    examples/example1/results/species/102506/spgc/spgc.results.nc
-```
-
-where `*/spgc.results.nc` is a NetCDF formatted output.
-
-Additional subcommands and options options are described in the help:
-
-```
-spgc --help
-spgc run --help
-```
-
-#### StrainPGC-wf
-
-A complete StrainPGC workflow going from raw input reads to estimated gene
-content is implemented using Snakemake (see workflow/Snakefile) and
-incorporates metagenome preprocessing, MIDAS, GT-Pro, and StrainFacts.
-
-After install Snakemake you must download and prepare the auxiliary reference
-data as follows:
-
-```
-bash examples/download_example1_reads.sh examples/input/reads
-bash examples/download_grch38.sh examples/ref
-bash examples/download_illumina_adapters.sh examples/ref
-bash examples/download_gtpro_refs.sh examples/ref
-```
-
-You can then navigate to the example project root and run the complete
-workflow as follows:
-
-```
-cd examples/example1
-
-species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
-num_procs=12  # Number of processes
-
-snakemake --configfile config.yaml --use-conda -j "$num_procs" \
-        "results/species/$species/spgc.strain.tsv" \
-        "results/species/$species/spgc.gene.tsv"
-```
-
-## Inputs
+### Inputs
 
 The core StrainPGC method takes three inputs for each species:
 
@@ -125,12 +157,12 @@ A suggested protocol for obtaining each of these inputs directly from raw
 metagenomic data as part of the larger StrainPGC workflow is described below
 and implemented as a Snakemake pipeline.
 
-## Outputs
+### Outputs
 
 The key result provided by StrainPGC is a strain-by-gene matrix assigning gene
 families to the genomes of each of the strains.
 
-## The StrainPGC Workflow
+### The StrainPGC Workflow
 
 A complete workflow can be divided into four phases:
 
@@ -141,13 +173,13 @@ A complete workflow can be divided into four phases:
 3. Running the StrainPGC algorithm
 4. Quality assessment / control
 
-### SNP Profiling
+#### SNP profiling
 
 The StrainPGC workflow uses [GT-Pro](https://github.com/zjshi/gt-pro) for SNP profiling,
 which captures metagenotypes across polymorphic positions found in the
 [Unified Human Gut Genome](https://doi.org/10.1038/s41587-020-0603-3) reference database.
 
-### Pangenome Profiling
+#### Pangenome profiling
 
 The StrainPGC workflow implements pangenome profiling against the
 (MIDAS UHGG reference database)[https://github.com/czbiohub-sf/MIDAS] gene
@@ -161,14 +193,14 @@ cross mapping of reads from other species.
 **This step is by far the most computationally intensive, dwarfing by far the
 runtime and memory requirements of all other steps.**
 
-### Strain tracking
+#### Strain tracking
 
 The StrainPGC workflow estimates strain compositions in each sample based on
 SNP profiles using [StrainFacts](https://github.com/bsmith89/StrainFacts).
 
 Sets of samples that are pure (or nearly pure) for a single strain are selected based on these estimates.
 
-### Quality assessment
+#### Quality assessment
 
 The quality of gene content assignments for each strain can be assessed
 post-hoc based on
@@ -181,7 +213,7 @@ Strains failing these two checks should be removed from downstream analyses.
 In addition, for the StrainPGC manuscript, we removed strains with fewer
 than 100 positions confidently genotyped after StrainFacts partitioning.
 
-### Additional utilities
+#### Additional utilities
 
 Tools are included with StrainPGC for several auxiliary purposes:
 
@@ -191,17 +223,17 @@ Tools are included with StrainPGC for several auxiliary purposes:
 - Visualizing the distribution of depth ratios and correlations (TODO)
 - TODO: What else is needed?
 
-## Citation
-
-For now, please cite the BioRxiv preprint: https://doi.org/10.1101/2024.04.10.588779
-
-A Zenodo DOI for this software repository will also be available in the near
-future.
-
-
 ## StrainPGC Development
 
-### Building Docker Image
+### Development Install
+
+Using an editable installation with `pip install -e` is the best (and easiest)
+way to get started on the StrainPGC codebase.
+
+It should be possible to _also_ use the pre-built Docker container by binding the
+root of the StrainPGC repository to `/src/StrainPGC` in that container.
+
+### Building the Docker Image
 
 ```
 docker build -t bsmith89/strainpgc-wf -t bsmith89/strainpgc-wf:latest -f workflow/envs/Dockerfile .

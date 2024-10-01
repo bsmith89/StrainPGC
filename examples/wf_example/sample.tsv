@@ -1,0 +1,7 @@
+mgen	r1_path	r2_path
+HSM67VDP	raw/HSM67VDP_R1.fastq.gz	raw/HSM67VDP_R2.fastq.gz
+HSM6XRSI	raw/HSM6XRSI_R1.fastq.gz	raw/HSM6XRSI_R2.fastq.gz
+MSM79HCG	raw/MSM79HCG_R1.fastq.gz	raw/MSM79HCG_R2.fastq.gz
+PSM6XBW3	raw/PSM6XBW3_R1.fastq.gz	raw/PSM6XBW3_R2.fastq.gz
+PSM7J1A2	raw/PSM7J1A2_R1.fastq.gz	raw/PSM7J1A2_R2.fastq.gz
+MSM79HCI	raw/MSM79HCI_R1.fastq.gz	raw/MSM79HCI_R2.fastq.gz
