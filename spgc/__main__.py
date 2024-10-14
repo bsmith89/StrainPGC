@@ -5,9 +5,9 @@ import sys
 APPLICATIONS = {
     "run": spgc.app.Run,
     "estimate_species_depth": spgc.app.EstimateSpeciesDepth,
-    "foobar": spgc.app.Example,
     "dump_genes": spgc.app.DumpGeneResults,
     "dump_strains": spgc.app.DumpStrainStats,
+    # "foobar": spgc.app.Example,
 }
 
 
