@@ -332,9 +332,12 @@ class DumpGeneResults(App):
             help="TSV outpath.",
         )
 
+    def validate_and_transform_args(self, args):
+        return args
+
     def execute(self, args):
         # (1) Load input data.
-        logging.info(f"Reading StrainPGC formatted data.")
+        logging.info("Reading StrainPGC formatted data.")
         result = xr.open_dataset(args.inpath)
         # (2) Write outputs
         logging.info(f"Writing estimated gene content table to {args.outpath}.")
@@ -354,13 +357,16 @@ class DumpStrainStats(App):
             help="TSV outpath.",
         )
 
+    def validate_and_transform_args(self, args):
+        return args
+
     def execute(self, args):
         # (1) Load input data.
         logging.info(f"Reading StrainPGC formatted data.")
         result = xr.open_dataset(args.inpath)
         # (2) Collect outputs
         strain_sample_meta = (
-            spgc[
+            result[
                 [
                     "num_gene",
                     "num_strain_sample",

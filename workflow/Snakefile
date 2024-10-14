@@ -525,39 +525,21 @@ rule dump_spgc_gene_content:
     output:
         prefix_workdir("species/{species}/spgc.gene.tsv"),
     input:
-        script="workflow/scripts/extract_strain_gene_hits_from_spgc_netcdf.py",  # TODO: Is there a "dump" subcommand?
         spgc=prefix_workdir("species/{species}/spgc/spgc.results.nc"),
     shell:
-        "{input.script} {input.spgc} {output}"
-
-
-## Aggregate metagenotype
-rule aggregate_strain_metagenotype:
-    output:
-        prefix_workdir("species/{species}/snv_counts.strain_pure.mgtp.nc"),
-    input:
-        script="workflow/scripts/aggregate_strain_metagenotypes_across_strain_samples.py",
-        mgtp=prefix_workdir("species/{species}/sfacts/snv_counts.mgtp.nc"),
-        mapping=prefix_workdir("species/{species}/spgc/strain_pure_samples.tsv"),
-    resources:
-        mem_mb=10_000,
-    shell:
-        "{input.script} {input.mapping} {input.mgtp} {output}"
+        "spgc dump_genes {input} {output}"
 
 
 ## Compile metadata
-rule compile_spgc_strain_summary:
+rule dump_spgc_strain_stats:
     output:
         prefix_workdir("species/{species}/spgc.strain.tsv"),
     input:
-        script="workflow/scripts/compile_spgc_results_metadata.py",
-        # TODO: Take genotype QC and metadata from a purpose-built script.
-        agg_mgtp=prefix_workdir("species/{species}/snv_counts.strain_pure.mgtp.nc"),
         spgc=prefix_workdir("species/{species}/spgc/spgc.results.nc"),
     params:
         ambig_thresh=0.1,
     shell:
-        "{input.script} {input.spgc} {input.agg_mgtp} {params.ambig_thresh} {output}"
+        "spgc dump_strains {input.spgc} {output}"
 
 
 # Summarize Workflow

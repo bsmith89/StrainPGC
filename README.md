@@ -19,7 +19,7 @@ cd StrainPGC
 pip install -e .  # Editable installation for development.
 ```
 
-This will also install all Python software dependencies, which currently include:
+This will also install all Python software dependencies, which currently entail:
 
 - pandas
 - xarray
@@ -30,8 +30,8 @@ It is recommended to install StrainPGC in an isolated Python environment (e.g. a
 
 ### Running StrainPGC (Core Tool)
 
-The following example demonstrates running StrainPGC on previously obtained
-pangenome profiles and strain-pure samples.
+The following example demonstrates running StrainPGC on
+provided input data.
 
 #### Step 1: Navigate to the example directory
 
@@ -46,13 +46,7 @@ cd examples/core_example
 Example input data for the core `spgc` tool are provided for testing and
 to demonstrate the correct file formats.
 
-These can be downloaded using the included script:
-
-```
-bash scripts/download_example_inputs.sh
-```
-
-This will download three files:
+This includes three files:
 
 - `pangenome_profile.depth.tsv.bz2` (matrix of sample-by-gene depths.)
 - `species_genes.list` (list of species-quantitative genes expected to be at 1x depth)
@@ -71,8 +65,10 @@ spgc run \
     spgc.results.nc
 ```
 
-The output file, `spgc.results.nc`, is an XArray/NetCDF binary format which includes
+The output file, `spgc.results.nc`, is an binary format which includes
 a variety of statistics about genes and strains.
+
+This file can be parsed directly using the XArray library in Python.
 
 
 #### Step 4: Dump results to text files
