@@ -2,4 +2,5 @@
 __pycache__
 examples/wf_example/raw
 examples/wf_example/ref
+examples/wf_example/results
 .snakemake
