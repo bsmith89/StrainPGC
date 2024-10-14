@@ -11,7 +11,9 @@ For now, please cite the [BioRxiv preprint](https://doi.org/10.1101/2024.04.10.5
 
 ### Installation
 
-StrainPGC can be installed directly from this code repository using pip:
+StrainPGC is a Python package. A Python version >=3.11 is recommended
+(although other versions may also work)
+StrainPGC can be installed directly from GitHub using pip:
 
 ```
 git clone https://github.com/bsmith89/StrainPGC StrainPGC
@@ -26,12 +28,12 @@ This will also install all Python software dependencies, which currently entail:
 - netcdf4
 - scipy
 
-It is recommended to install StrainPGC in an isolated Python environment (e.g. a `conda env`).
+It is also recommended to install StrainPGC in an isolated Python environment (e.g. a `conda env`).
 
-### Running StrainPGC (Core Tool)
+### Running StrainPGC on Example Inputs
 
 The following example demonstrates running StrainPGC on
-provided input data.
+a small input dataset.
 
 #### Step 1: Navigate to the example directory
 
@@ -40,8 +42,6 @@ From the root of the StrainPGC repository,
 ```
 cd examples/core_example
 ```
-
-#### Step 2: Prepare example data
 
 Example input data for the core `spgc` tool are provided for testing and
 to demonstrate the correct file formats.
@@ -53,7 +53,7 @@ This includes three files:
 - `strain_pure_samples.tsv` (mapping from strain-pure-samples to their strain identity)
 
 
-#### Step 3: Run StrainPGC
+#### Step 2: Run StrainPGC
 
 With correctly formatted input files, like those provided, the StrainPGC method can be run as follows:
 
@@ -71,11 +71,11 @@ a variety of statistics about genes and strains.
 This file can be parsed directly using the XArray library in Python.
 
 
-#### Step 4: Dump results to text files
+#### Step 3: Dump results to text files
 
 ```
-spgc dump_genes spgc.results.nc > spgc.gene.tsv
-spgc dump_strains spgc.results.nc > spgc.strain.tsv
+spgc dump_genes spgc.results.nc spgc.gene.tsv
+spgc dump_strains spgc.results.nc spgc.strain.tsv
 ```
 
 The two output files are:
@@ -83,7 +83,7 @@ The two output files are:
 - `spgc.gene.tsv` (estimated gene content)
 - `spgc.strain.tsv` (strain statistics)
 
-Additional subcommands and options options are described in the help:
+Additional subcommands and options are described in the help:
 
 ```
 spgc --help
@@ -99,6 +99,14 @@ incorporates metagenome preprocessing, MIDAS, GT-Pro, and StrainFacts.
 The following example demonstrates running this workflow on a small number
 of example shotgun metagenomes.
 
+#### Step 0: Install required software
+
+You'll need to [install Snakemake](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html#installation) (version >= 8.20).
+
+This quick-start also assumes that you have Apptainer/Singularity on your system.
+If this is not available, the same [container](https://hub.docker.com/r/bsmith89/strainpgc-wf) can be used with Docker, or you can
+install the necessary software directly.
+
 #### Step 1: Navigate to the example directory
 
 From the root of the StrainPGC repository,
@@ -107,12 +115,12 @@ From the root of the StrainPGC repository,
 cd examples/wf_example
 ```
 
-#### Step 2: Prepare example data
+#### Step 2: Download example data
 
 A small test dataset for the core `spgc` tool is provided for testing.
 
 These raw metagenomes and the necessary reference data can be downloaded using
-the included scripts:
+included scripts as follows:
 
 ```
 bash scripts/download_example_reads.sh
@@ -122,7 +130,7 @@ bash scripts/download_gtpro_refs.sh
 
 #### Step 3: Run the Snakemake Workflow
 
-By default, this workflow implementation capitalizes on Snakemake's Apptainer
+By default, this workflow implementation leverages Snakemake's Apptainer
 integration to download and run a prebuilt container
 (https://hub.docker.com/r/bsmith89/strainpgc-wf)
 integrating StrainPGC and all other dependencies of the workflow.
@@ -136,8 +144,6 @@ num_procs=12  # Number of CPU processes
 
 snakemake --profile profile \
         -j "$num_procs" \
-        --apptainer-args "/path/to/StrainPGC/repository" \
-        --configfile config.yaml \
         "results/species/$species/spgc.strain.tsv" \
         "results/species/$species/spgc.gene.tsv"
 ```
@@ -158,7 +164,7 @@ inferred to be encoded by that species in that sample.
 This approach has proven fruitful, but has three major shortcomings when
 strain-specific gene content is desired:
 
-1. In samples with multiple, strains, genes may not be assigned
+1. In samples with multiple strains, genes may not be assigned
    when they are missing from one or more of these genomes.
    due to lower depth relative to core genes.
 2. Gene assignment error is elevated in low-abundance species due to a lower
@@ -193,8 +199,9 @@ and implemented as a Snakemake pipeline.
 
 ### Outputs
 
-The key result provided by StrainPGC is a strain-by-gene matrix assigning gene
-families to the genomes of each of the strains.
+The key result provided by StrainPGC is a strain-by-gene matrix indicating
+which genes are estimated to be present and which absent in the genomes of each of the
+strains.
 
 ### The StrainPGC Workflow
 
@@ -245,17 +252,7 @@ post-hoc based on
 Strains failing these two checks should be removed from downstream analyses.
 
 In addition, for the StrainPGC manuscript, we removed strains with fewer
-than 100 positions confidently genotyped after StrainFacts partitioning.
-
-#### Additional utilities
-
-Tools are included with StrainPGC for several auxiliary purposes:
-
-- Summarizing statistics about strains and genes (TODO)
-- Identifying species core genes based on a reference genome-by-gene occurrence
-  table (TODO)
-- Visualizing the distribution of depth ratios and correlations (TODO)
-- TODO: What else is needed?
+than 100 positions confidently genotyped by GT-Pro after StrainFacts partitioning and sample pooling.
 
 ## StrainPGC Development
 
@@ -266,6 +263,26 @@ way to get started on the StrainPGC codebase.
 
 It should be possible to _also_ use the pre-built Docker container by binding the
 root of the StrainPGC repository to `/src/StrainPGC` in that container.
+
+For instance, the example in the StrainPGC-wf quick-start
+can be run as follows:
+
+```
+species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
+num_procs=12  # Number of CPU processes
+
+snakemake --profile profile \
+        --apptainer-args "--bind /path/to/StrainPGC:/src/StrainPGC"
+        -j "$num_procs" \
+        "results/species/$species/spgc.strain.tsv" \
+        "results/species/$species/spgc.gene.tsv"
+```
+
+Replacing `/path/to/StrainPGC` with the path to your StrainPGC
+code repository.
+
+In this way, edits to the Python package will be reflected
+in the Snakemake execution.
 
 ### Building the Docker Image
 
