@@ -1,15 +1,20 @@
-outdir: 'results'
-main_container: 'docker://bsmith89/strainpgc-wf@sha256:5d3f2ef830e18b47dbf62a772d84ac217d99916093fd21e084230c411cd4503f'
+# Default parameters for the StrainPGC Workflow
+# Override workflow/config.yaml with the following flag: `--configfile config.yaml`.
+main_container: 'docker://bsmith89/strainpgc-wf@sha256:a14430a208a0dc078bb072309cb62fddf524cd8915d4dbd3acaf2b872c0cbd81'
 gtpro_container: 'docker://bsmith89/gtpro@sha256:dedf350917364f7c3018124fdb9840fdbb188700b216a42acf54d194e14b2df3'
+outdir: 'results'
+preprocessing_infix: 'dedup.deadapt.qtrim'
+sfacts_infix: 'filt-poly05-cvrg05.ss-g10000-block0-seed0.sfacts-s85-seed0'
+sfacts_strategy_path: 'sfacts_strategy.args'
+pangenome_profiling_agg_level: '75'
+
+# # The following paths and parameters are specific to this example and must be specified
+# # correctly for other datasets.
 sample_manifest_path: 'sample.tsv'
 species_list_path: 'species.list'
 species_gene_path: 'species_gene.tsv'
 illumina_adapters_fasta_path: 'ref/illumina_adapters.fa'
 midasdb_dir: 'ref/midasdb_uhgg.d'
-preprocessing_infix: 'dedup.deadapt.qtrim'
-sfacts_infix: 'filt-poly05-cvrg05.ss-g10000-block0-seed0.sfacts-s85-seed0'
-sfacts_strategy_path: 'sfacts_strategy.args'
-pangenome_profiling_agg_level: '75'
 gtpro_ref_name: "ref/gtpro/20190723_881species"
 gtpro_ref_dir: 'ref/gtpro'
 target_all_noprefix: ['species/102506/spgc.strain.tsv', 'species/102506/spgc.gene.tsv']
