@@ -2,5 +2,5 @@ printshellcmds: true
 notemp: true
 keep-going: true
 use-apptainer: true
-apptainer-args: "--bind $PWD/../../.. --bind /pollard/data/projects/bsmith/strain-corr/include/StrainFacts:/src/StrainFacts"
+apptainer-args: "--bind $PWD/../.."
 configfile: "$PWD/config.yaml"
