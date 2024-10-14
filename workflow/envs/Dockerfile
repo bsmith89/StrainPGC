@@ -68,11 +68,11 @@ RUN \
     && git checkout 8e321ed29080e1ee3138f69e56b033d17d140798 \
     && pip install -e .
 
-ADD . src/StrainPGC/
-RUN \
-    pip install -e src/StrainPGC/
-
 RUN \
     mamba install -y -c conda-forge \
         graphviz \
     && conda clean -afy
+
+ADD . src/StrainPGC/
+RUN \
+    pip install -e src/StrainPGC/

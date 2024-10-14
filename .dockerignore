@@ -1,3 +1,3 @@
-examples/ref
-examples/input
+examples/wf_example/raw/*
+examples/wf_example/ref/*
 .git
