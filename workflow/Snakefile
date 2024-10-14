@@ -65,38 +65,6 @@ rule symlink_input_reads:
         """
 
 
-## Filter-out host reads
-rule filter_out_human_reads:
-    output:
-        r1=prefix_workdir("reads/{mgen}/preprocess/r1{stem}hfilt.fq.gz"),
-        r2=prefix_workdir("reads/{mgen}/preprocess/r2{stem}hfilt.fq.gz"),
-    input:
-        script="workflow/scripts/filter_out_mapping_reads.sh",
-        r1=prefix_workdir("reads/{mgen}/preprocess/r1{stem}fq.gz"),
-        r2=prefix_workdir("reads/{mgen}/preprocess/r2{stem}fq.gz"),
-        bt2_index=[
-            config["host_bt2_index_stem"] + suffix
-            for suffix in [
-                ".1.bt2",
-                ".2.bt2",
-                ".3.bt2",
-                ".4.bt2",
-                ".rev.1.bt2",
-                ".rev.2.bt2",
-            ]
-        ],
-    params:
-        bt2_index_name=config["host_bt2_index_stem"],
-        # bt2_index_name=lambda w, input: os.path.splitext(input.bt2_index[0])[0],
-    threads: 8
-    resources:
-        mem_mb=10_000,
-    shell:
-        """
-        {input.script} {threads} {params.bt2_index_name} {input.r1} {input.r2} {output.r1} {output.r2}
-        """
-
-
 ## Deduplicate
 rule deduplicate_reads:
     output:

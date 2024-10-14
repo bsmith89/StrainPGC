@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-outdir="$1"
+outdir="raw"
 sample_list="HSM67VDP HSM6XRSI PSM6XBW3 PSM7J1A2 MSM79HCG MSM79HCI"
 
 mkdir -p $outdir && cd $outdir

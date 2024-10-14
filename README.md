@@ -28,34 +28,64 @@ This will also install all Python software dependencies, which currently include
 
 It is recommended to install StrainPGC in an isolated Python environment (e.g. a `conda env`).
 
-### The Core Tool
+### Running StrainPGC (Core Tool)
 
-#### Example data
+The following example demonstrates running StrainPGC on previously obtained
+pangenome profiles and strain-pure samples.
+
+#### Step 1: Navigate to the example directory
+
+From the root of the StrainPGC repository,
+
+```
+cd examples/core_example
+```
+
+#### Step 2: Prepare example data
 
 Example input data for the core `spgc` tool are provided for testing and
-demonstration purposes.
+to demonstrate the correct file formats.
 
 These can be downloaded using the included script:
 
 ```
-bash examples/download_example_inputs.sh examples/core_example
+bash scripts/download_example_inputs.sh
 ```
 
-With correctly formatted input data, StrainPGC method is run (using example data) as follows:
+This will download three files:
+
+- `pangenome_profile.depth.tsv.bz2` (matrix of sample-by-gene depths.)
+- `species_genes.list` (list of species-quantitative genes expected to be at 1x depth)
+- `strain_pure_samples.tsv` (mapping from strain-pure-samples to their strain identity)
+
+
+#### Step 3: Run StrainPGC
+
+With correctly formatted input files, like those provided, the StrainPGC method can be run as follows:
 
 ```
-cd examples/core_example
 spgc run \
     pangenome_profile.depth.tsv.bz2 \
     species_genes.list \
     strain_pure_samples.tsv \
     spgc.results.nc
+```
+
+The output file, `spgc.results.nc`, is an XArray/NetCDF binary format which includes
+a variety of statistics about genes and strains.
+
+
+#### Step 4: Dump results to text files
+
+```
 spgc dump_genes spgc.results.nc > spgc.gene.tsv
 spgc dump_stats spgc.results.nc > spgc.strain.tsv
 ```
 
-where `spgc.results.nc` is an XArray/NetCDF binary format and and `dump_genes` / `dump_stats`
-extract from it gene content and strain statistics, respectively.
+The two output files are:
+
+- `spgc.gene.tsv` (estimated gene content)
+- `spgc.strain.tsv` (strain statistics)
 
 Additional subcommands and options options are described in the help:
 
@@ -64,30 +94,47 @@ spgc --help
 spgc run --help
 ```
 
-### StrainPGC-wf
+### Running an Integrated StrainPGC-wf
 
 A complete StrainPGC workflow going from raw input reads to estimated gene
-content is implemented using Snakemake (see `workflow/Snakefile`) and
+content has been implemented using Snakemake (see `workflow/Snakefile`) and
 incorporates metagenome preprocessing, MIDAS, GT-Pro, and StrainFacts.
 
-#### Example data
+The following example demonstrates running this workflow on a small number
+of example shotgun metagenomes.
 
-After install Snakemake you must download the auxiliary reference data as
-described above.
+#### Step 1: Navigate to the example directory
 
-```
-bash examples/download_example_reads.sh examples/wf_example/raw
-bash examples/download_grch38.sh examples/wf_example/ref
-bash examples/download_illumina_adapters.sh examples/wf_example/ref
-bash examples/download_gtpro_refs.sh examples/wf_example/ref/gtpro
-```
-
-You can then navigate to the example project root and run the complete
-workflow as follows:
+From the root of the StrainPGC repository,
 
 ```
 cd examples/wf_example
+```
 
+#### Step 2: Prepare example data
+
+A small test dataset for the core `spgc` tool is provided for testing.
+
+These raw metagenomes and the necessary reference data can be downloaded using
+the included scripts:
+
+```
+bash scripts/download_example_reads.sh
+bash scripts/download_illumina_adapters.sh
+bash scripts/download_gtpro_refs.sh
+```
+
+#### Step 3: Run the Snakemake Workflow
+
+By default, this workflow implementation capitalizes on Snakemake's Apptainer
+integration to download and run a prebuilt container
+(https://hub.docker.com/r/bsmith89/strainpgc-wf)
+integrating StrainPGC and all other dependencies of the workflow.
+
+The Snakemake profile provided in `examples/wf_example/profile/config.yaml`
+may require customization for your platform.
+
+```
 species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
 num_procs=12  # Number of CPU processes
 
@@ -99,16 +146,7 @@ snakemake --profile profile \
         "results/species/$species/spgc.gene.tsv"
 ```
 
-The Snakemake profile provided in `examples/wf_example/profile/config.yaml`
-may require customization for your platform.
-
-By default, this workflow implementation capitalizes on Snakemake's Apptainer
-integration to download and run a prebuilt container
-(https://hub.docker.com/r/bsmith89/strainpgc-wf)
-integrating StrainPGC and all other dependencies of the workflow.
-
 ## Understanding StrainPGC
-
 
 The motivation and methodological details are fully described, benchmarked, and
 demonstrated in [our manuscript](https://doi.org/10.1101/2024.04.10.588779).
