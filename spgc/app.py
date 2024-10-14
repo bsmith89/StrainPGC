@@ -7,6 +7,7 @@ import spgc
 import logging
 import sys
 import pandas as pd
+import xarray as xr
 
 
 class App:
@@ -316,3 +317,61 @@ class Run(App):
 
         # (5) Write strain metadata
         # TODO
+
+class DumpGeneResults(App):
+    """Extract gene content results and write to TSV."""
+
+    def add_custom_cli_args(self):
+        # Required arguments
+        self.parser.add_argument(
+            "inpath",
+            help="NetCDF file produced by `spgc run`.",
+        )
+        self.parser.add_argument(
+            "outpath",
+            help="TSV outpath.",
+        )
+
+    def execute(self, args):
+        # (1) Load input data.
+        logging.info(f"Reading StrainPGC formatted data.")
+        result = xr.open_dataset(args.inpath)
+        # (2) Write outputs
+        logging.info(f"Writing estimated gene content table to {args.outpath}.")
+        result["gene_selected"].to_pandas().rename_axis(index="gene").astype(int).to_csv(args.outpath, sep="\t")
+
+class DumpStrainStats(App):
+    """Extract strain statistics and write to TSV."""
+
+    def add_custom_cli_args(self):
+        # Required arguments
+        self.parser.add_argument(
+            "inpath",
+            help="NetCDF file produced by `spgc run`.",
+        )
+        self.parser.add_argument(
+            "outpath",
+            help="TSV outpath.",
+        )
+
+    def execute(self, args):
+        # (1) Load input data.
+        logging.info(f"Reading StrainPGC formatted data.")
+        result = xr.open_dataset(args.inpath)
+        # (2) Collect outputs
+        strain_sample_meta = (
+            spgc[
+                [
+                    "num_gene",
+                    "num_strain_sample",
+                    "sum_strain_depth",
+                    "max_strain_depth",
+                    "species_gene_frac",
+                    "log_selected_gene_depth_ratio_std",
+                ]
+            ]
+            .to_dataframe()
+            )
+        # (2) Write outputs
+        logging.info(f"Writing strain statistics table to {args.outpath}.")
+        strain_sample_meta.rename_axis(index="strain").to_csv(args.outpath, sep="\t")

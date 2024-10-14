@@ -79,7 +79,7 @@ a variety of statistics about genes and strains.
 
 ```
 spgc dump_genes spgc.results.nc > spgc.gene.tsv
-spgc dump_stats spgc.results.nc > spgc.strain.tsv
+spgc dump_strains spgc.results.nc > spgc.strain.tsv
 ```
 
 The two output files are:
