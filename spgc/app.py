@@ -338,7 +338,7 @@ class DumpGeneResults(App):
     def execute(self, args):
         # (1) Load input data.
         logging.info("Reading StrainPGC formatted data.")
-        result = xr.open_dataset(args.inpath)
+        result = xr.load_dataset(args.inpath)
         # (2) Write outputs
         logging.info(f"Writing estimated gene content table to {args.outpath}.")
         result["gene_selected"].to_pandas().rename_axis(index="gene").astype(int).to_csv(args.outpath, sep="\t")
@@ -363,7 +363,7 @@ class DumpStrainStats(App):
     def execute(self, args):
         # (1) Load input data.
         logging.info(f"Reading StrainPGC formatted data.")
-        result = xr.open_dataset(args.inpath)
+        result = xr.load_dataset(args.inpath)
         # (2) Collect outputs
         strain_sample_meta = (
             result[
