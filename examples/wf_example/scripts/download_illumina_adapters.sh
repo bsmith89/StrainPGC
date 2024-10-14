@@ -3,4 +3,4 @@
 outdir="$1"
 
 mkdir -p $outdir && cd $outdir
-curl -O https://raw.githubusercontent.com/vsbuffalo/scythe/master/illumina_adapters.fa
+curl -kO https://raw.githubusercontent.com/vsbuffalo/scythe/master/illumina_adapters.fa

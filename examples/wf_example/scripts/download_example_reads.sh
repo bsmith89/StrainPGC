@@ -7,7 +7,7 @@ mkdir -p $outdir && cd $outdir
 for sample in $sample_list
 do
     echo $sample
-    curl -O "https://ibdmdb.org/downloads/raw/HMP2/MGX/2018-05-04/$sample.tar" \
+    curl -kO "https://ibdmdb.org/downloads/raw/HMP2/MGX/2018-05-04/$sample.tar" \
     && tar -xf "$sample.tar" \
     && rm "$sample.tar"
 done
