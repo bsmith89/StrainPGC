@@ -213,6 +213,12 @@ A complete workflow can be divided into four phases:
 3. Running the StrainPGC algorithm
 4. Quality assessment / control
 
+We have implemented a version of this workflow as a Snakemake pipeline.
+Applied to the example data, this pipeline can be visualized as the following
+graph of dependencies:
+
+![Workflow Graph](docs/workflow_graph.svg)
+
 #### SNP profiling
 
 The StrainPGC workflow uses [GT-Pro](https://github.com/zjshi/gt-pro) for SNP profiling,

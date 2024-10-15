@@ -1,5 +1,5 @@
 digraph snakemake_dag {
-    graph[bgcolor=white, margin=0];
+    graph[bgcolor=white, margin=0, rankdir=LR];
     node[shape=box, style=rounded, fontname=sans,                 fontsize=10, penwidth=2];
     edge[penwidth=2, color=grey];
 0 [ shape=none, margin=0, label=<<table border="2" color="#57D9B4" cellspacing="3" cellborder="0">
