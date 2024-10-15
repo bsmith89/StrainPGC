@@ -217,7 +217,7 @@ We have implemented a version of this workflow as a Snakemake pipeline.
 Applied to the example data, this pipeline can be visualized as the following
 graph of dependencies:
 
-![Workflow Graph](docs/workflow_graph.svg)
+[![Workflow Graph](docs/workflow_graph.svg)](https://raw.githubusercontent.com/bsmith89/StrainPGC/refs/heads/main/docs/workflow_graph.svg)
 
 #### SNP profiling
 
