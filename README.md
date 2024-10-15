@@ -246,12 +246,18 @@ The quality of gene content assignments for each strain can be assessed
 post-hoc based on
 
 1. The fraction of species core genes assigned
-2. Detecting outliers with an anomalous total numbers of genes assigned
+2. The noisyness of the normalized depths of strain genes
 
-Strains failing these two checks should be removed from downstream analyses.
+Each of these scores is calculated by StrainPGC and can be read off the table
+of strain statistics obtained with `spgc dump_strains`.
 
-In addition, for the StrainPGC manuscript, we removed strains with fewer
-than 100 positions confidently genotyped by GT-Pro after StrainFacts partitioning and sample pooling.
+Strains with too few core genes (e.g. a `species_gene_frac` < 95%) or too much
+noise in gene depths (e.g. a `log_selected_gene_depth_ratio_std` > 0.25) should
+be removed from downstream analyses.
+
+In addition, for the StrainPGC manuscript, we removed strains with fewer than
+100 positions confidently genotyped by GT-Pro after StrainFacts partitioning
+and sample pooling.
 
 ## StrainPGC Development
 
