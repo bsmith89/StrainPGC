@@ -214,7 +214,8 @@ A complete workflow can be divided into four phases:
 4. Quality assessment / control
 
 We have implemented a version of this workflow as a Snakemake pipeline.
-Applied to the example data, this pipeline can be visualized as the following
+Applied to the [example data](https://github.com/bsmith89/StrainPGC#running-an-integrated-strainpgc-wf),
+this pipeline can be visualized as the following
 graph of dependencies:
 
 [![Workflow Graph](docs/workflow_graph.svg)](https://raw.githubusercontent.com/bsmith89/StrainPGC/refs/heads/main/docs/workflow_graph.svg)
