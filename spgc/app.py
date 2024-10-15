@@ -276,6 +276,11 @@ class Run(App):
         assert (
             0 <= args.depth_ratio_thresh
         ), "Gene correlation selection threshold must be >= 0"
+
+        if args.full_output:
+            logging.warn("DEPRECATED: Output is now full NetCDF by default. "
+                         "This flag will be removed in a future release.")
+
         return args
 
     def execute(self, args):
@@ -309,14 +314,8 @@ class Run(App):
         )
 
         # (4) Write outputs
-        if args.full_output:
-            logging.info(f"Writing NetCDF with all results to {args.outpath}.")
-            result.to_netcdf(args.outpath)
-        else:
-            result["gene_selected"].to_pandas().to_csv(args.outpath, sep="\t")
-
-        # (5) Write strain metadata
-        # TODO
+        logging.info(f"Writing NetCDF with all results to {args.outpath}.")
+        result.to_netcdf(args.outpath)
 
 class DumpGeneResults(App):
     """Extract gene content results and write to TSV."""
