@@ -119,12 +119,11 @@ cd examples/wf_example
 
 A small test dataset for the core `spgc` tool is provided for testing.
 
-These raw metagenomes and the necessary reference data can be downloaded using
-included scripts as follows:
+These raw metagenomes and the necessary GT-Pro reference data can be downloaded
+using included scripts as follows:
 
 ```
 bash scripts/download_example_reads.sh
-bash scripts/download_illumina_adapters.sh
 bash scripts/download_gtpro_refs.sh
 ```
 
