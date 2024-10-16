@@ -4,7 +4,7 @@ import pandas as pd
 import os.path
 
 
-snakemake.utils.min_version("6.0")
+snakemake.utils.min_version("8.0")
 
 
 include: "rules/common.smk"
