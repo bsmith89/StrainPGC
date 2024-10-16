@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-outdir="ref/gtpro"
+outdir="$1"
 
 mkdir -p $outdir && cd $outdir
 wget --no-check-certificate --content-disposition https://fileshare.czbiohub.org/s/daK4Wj3N7EwSSrd/download
