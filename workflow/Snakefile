@@ -131,6 +131,10 @@ rule quality_trim_reads:
 
 ## Alias Preprocessed Reads
 rule alias_preprocessed_reads:
+    """Link preprocessed metagenomes to a new, non-temp file.
+
+    Note that this is not a symbolic link so that the original filename can be removed.
+    """
     output:
         prefix_workdir("reads/{mgen}/preprocess/{stem}.proc.fq.gz"),
     input:
@@ -225,7 +229,7 @@ rule run_midas_genes_align_only:
         midasdb_name="uhgg",
     threads: 4
     resources:
-        mem_mb=30_000,
+        mem_mb=35_000,
     shell:
         """
         midas run_genes --num_cores {threads} \
@@ -236,7 +240,7 @@ rule run_midas_genes_align_only:
                 --prebuilt_bowtie2_species {input.species_list} \
                 --select_threshold=-1 \
                 --aln_speed sensitive \
-                --aln_extra_flags '--mm --ignore-quals' \
+                --aln_extra_flags "--mm --ignore-quals" \
                 --total_depth 0 \
                 --cluster_level 99 \
                 --alignment_only \
