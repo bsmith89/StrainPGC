@@ -250,7 +250,7 @@ which captures metagenotypes across polymorphic positions found in the
 #### Pangenome profiling
 
 The StrainPGC workflow implements pangenome profiling against the
-(MIDAS UHGG reference database)[https://github.com/czbiohub-sf/MIDAS] gene
+[MIDAS UHGG reference database](https://github.com/czbiohub-sf/MIDAS) gene
 clusters using using Bowtie2-based read mapping.
 
 While other profiling tools may be used, excessive post-hoc filtering
