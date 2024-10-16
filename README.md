@@ -346,5 +346,6 @@ in the Snakemake execution.
 
 ```
 docker build -t bsmith89/strainpgc-wf -t bsmith89/strainpgc-wf:latest -f workflow/envs/Dockerfile .
+docker run -it --rm -v $(pwd)/../..:$(pwd)/../.. bsmith89/strainpgc-wf:latest
 docker push bsmith89/strainpgc-wf
 ```
