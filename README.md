@@ -100,7 +100,7 @@ The following example demonstrates running this workflow on a small number
 of example shotgun metagenomes.
 
 
-**NOTE: Running this example workflow requires a substantial amount of disk storage, memory, and CPU time. ([see below](TODO).)**
+**NOTE: Running this example workflow requires a substantial amount of disk storage, memory, and CPU time. ([see below](#system-requirements).)**
 
 #### Step 0: Install required software
 
