@@ -288,7 +288,7 @@ and sample pooling.
 
 ## System requirements
 
-The core StrainPGC tool is single-threaded and not computational intensive: ~6 seconds of CPU time and ~200 MB of RAM.
+The core StrainPGC tool is single-threaded and not computationally intensive: ~6 seconds of CPU time and ~200 MB of RAM.
 
 However, the integrated workflow requires a substantial amount of storage,
 memory, and CPU time.
