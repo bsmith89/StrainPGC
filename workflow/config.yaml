@@ -1,18 +1,30 @@
-# Default parameters for the StrainPGC Workflow
-main_container: 'docker://bsmith89/strainpgc-wf@sha256:a14430a208a0dc078bb072309cb62fddf524cd8915d4dbd3acaf2b872c0cbd81'
+# Default parameters for the StrainPGC workflow:
+main_container: 'docker://bsmith89/strainpgc-wf@sha256:a71ae3c3e28b9e95f9bac0a9283452ac216dc8eda0479e222a137650929667e6'
 gtpro_container: 'docker://bsmith89/gtpro@sha256:dedf350917364f7c3018124fdb9840fdbb188700b216a42acf54d194e14b2df3'
-outdir: 'results'
 preprocessing_infix: 'dedup.deadapt.qtrim'
 sfacts_infix: 'filt-poly05-cvrg05.ss-g10000-block0-seed0.sfacts-s85-seed0'
 sfacts_strategy_path: 'sfacts_strategy.args'
 pangenome_profiling_agg_level: '75'
 
-# # The following paths and parameters must be configured for each project.
-# sample_manifest_path: 'sample.tsv'
-# species_list_path: 'species.list'
-# species_gene_path: 'species_gene.tsv'
-# illumina_adapters_fasta_path: 'ref/illumina_adapters.fa'
-# midasdb_dir: 'ref/midasdb_uhgg.d'
-# gtpro_ref_name: "ref/gtpro/20190723_881species"
-# gtpro_ref_dir: 'ref/gtpro'
-# target_all_noprefix: ['species/102506/spgc.strain.tsv', 'species/102506/spgc.gene.tsv']
+# # Projects should set their own config for the following parameters:
+# # (For an examples see `examples/wf_example/config.yaml`.)
+# # Directory for all workflow output files.
+# outdir: 'TODO'
+# # Directory for benchmarking results.
+# benchdir: 'benchmark'
+# # Sample manifest linking sample names to r1/r2 reads
+# sample_manifest_path: 'TODO'
+# # List of species_ids for MIDAS profiling
+# species_list_path: 'TODO'
+# # Mapping from single-copy genes to their species_id
+# species_gene_path: 'TODO'
+# # Path to illumina_adapters FASTA
+# illumina_adapters_fasta_path: 'TODO'
+# # Directory to use for MIDASDB managed by MIDAS.
+# midasdb_dir: 'TODO'
+# # Stem of the GT-Pro reference DB
+# gtpro_ref_name: 'TODO'
+# # Location of the GT-Pro reference DB
+# gtpro_ref_dir: 'TODO'
+# # Which files to make by default (excluding the `outdir` prefix)
+# target_all_noprefix: ['TODO']

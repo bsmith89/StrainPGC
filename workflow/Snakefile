@@ -4,19 +4,16 @@ import pandas as pd
 import os.path
 
 
-snakemake.utils.min_version("8.20")
+snakemake.utils.min_version("6.0")
 
 
 include: "rules/common.smk"
 
 
-# Config  # Should go in config.yaml
-
-
 ## Workflow config.
 
 
-# This is all of the default config values, and does not include any data-specific
+# This is all of the default config values, and does not include any project-specific
 # configuration.
 configfile: "workflow/config.yaml"
 
@@ -24,9 +21,15 @@ configfile: "workflow/config.yaml"
 container: config["main_container"]
 
 
+## Default Target
+
+
 rule all:
     input:
         targets=[prefix_workdir(f) for f in config["target_all_noprefix"]],
+
+
+## Utilities / Testing
 
 
 rule start_shell:
@@ -41,7 +44,7 @@ rule start_shell_gtpro:
         "bash"
 
 
-# Metadata  # Paths to metadata files should go in project specific config.yaml?
+# Metadata  # Paths to metadata files should go in project specific config.yaml .
 
 
 ## Load metagenome paths
@@ -58,6 +61,8 @@ rule symlink_input_reads:
     input:
         r1=lambda w: config["samples"].loc[w.mgen]["r1_path"],
         r2=lambda w: config["samples"].loc[w.mgen]["r2_path"],
+    benchmark:
+        prefix_benchmarkdir("reads/{mgen}/preprocess/r.fq.gz")
     shell:
         """
         ln -rs {input.r1} {output.r1}
@@ -74,6 +79,8 @@ rule deduplicate_reads:
         script="workflow/scripts/fastuniq_wrapper.sh",
         r1=prefix_workdir("reads/{mgen}/preprocess/r1{stem}fq.gz"),
         r2=prefix_workdir("reads/{mgen}/preprocess/r2{stem}fq.gz"),
+    benchmark:
+        prefix_benchmarkdir("reads/{mgen}/preprocess/r{stem}dedup.fq.gz")
     resources:
         mem_mb=10_000,
     shell:
@@ -89,6 +96,8 @@ rule trim_adapters:
         fq=prefix_workdir("reads/{mgen}/preprocess/{stem}.fq.gz"),
     log:
         prefix_workdir("reads/{mgen}/preprocess/{stem}.deadapt.log"),
+    benchmark:
+        prefix_benchmarkdir("reads/{mgen}/preprocess/{stem}.deadapt.fq.gz")
     threads: 2
     shell:
         """
@@ -106,6 +115,8 @@ rule quality_trim_reads:
     input:
         r1=prefix_workdir("reads/{mgen}/preprocess/r1{stem}fq.gz"),
         r2=prefix_workdir("reads/{mgen}/preprocess/r2{stem}fq.gz"),
+    benchmark:
+        prefix_benchmarkdir("reads/{mgen}/preprocess/r{stem}qtrim.fq.gz")
     params:
         qual_type="sanger",
         qual_thresh=20,
@@ -137,6 +148,8 @@ rule initialize_midasdb_for_species_list:
         flag=prefix_workdir("midasdb_initialized.flag"),
     input:
         species_list=config["species_list_path"],
+    benchmark:
+        prefix_benchmarkdir("midasdb_initialized.flag")
     params:
         midasdb_dir=config["midasdb_dir"],
     threads: 8
@@ -168,6 +181,8 @@ rule build_midas_pangenomes_bowtie_index:
     input:
         midasdb_flag=prefix_workdir("midasdb_initialized.flag"),
         species_list=config["species_list_path"],
+    benchmark:
+        prefix_benchmarkdir("pangenomes.bt2.d")
     params:
         midasdb_name="uhgg",
         midasdb_dir=config["midasdb_dir"],
@@ -199,6 +214,8 @@ rule run_midas_genes_align_only:
         bowtie_indexes=prefix_workdir("pangenomes.bt2.d"),
         r1=prefix_workdir("reads/{mgen}/preprocess/r1.proc.fq.gz"),
         r2=prefix_workdir("reads/{mgen}/preprocess/r2.proc.fq.gz"),
+    benchmark:
+        prefix_benchmarkdir("reads/{mgen}/midas/pangenome_profile_raw.bam")
     params:
         outdir=prefix_workdir("reads/{mgen}/midas/pangenome_profile.midas.d"),
         outbam=prefix_workdir(
@@ -238,6 +255,10 @@ rule midas_profile_genes:
         ),
     input:
         prefix_workdir("reads/{mgen}/midas/pangenome_profile_raw.bam"),
+    benchmark:
+        prefix_benchmarkdir(
+            "reads/{mgen}/midas/pangenome_profile_raw.gene_mapping_tally.tsv.bz2"
+        )
     threads: 1
     shell:
         """
@@ -267,6 +288,8 @@ rule merge_and_aggregate_pangenome_profiles:
             mgen=config["all_samples"],
         ),
         gene_info=prefix_workdir("species/{species}/midas/clusters_99_info.tsv"),
+    benchmark:
+        prefix_benchmarkdir("species/{species}/midas/pangenome_profile.depth.tsv.bz2")
     params:
         args=expand(
             "{mgen}="
@@ -293,6 +316,8 @@ rule run_gtpro:
     input:
         r=prefix_workdir("reads/{mgen}/preprocess/{r}.proc.fq.gz"),
         db=config["gtpro_ref_dir"],
+    benchmark:
+        prefix_benchmarkdir("reads/{mgen}/gtpro/{r}.snv_counts_raw.gz")
     params:
         db_l=32,
         db_m=36,
@@ -318,8 +343,8 @@ rule gtpro_finish_processing_reads:
         db=os.path.join(
             config["gtpro_ref_dir"], "variants_main.covered.hq.snp_dict.tsv"
         ),
-    # container:  # NOTE (2024-09-26): Does not require the GT-Pro container because it's just a python script.
-    #     config['gtpro_container']
+    benchmark:
+        prefix_benchmarkdir("reads/{mgen}/gtpro/{r}.snv_counts.tsv.bz2")
     shell:
         "GT_Pro parse --dict {input.db} --in <(zcat {input.raw}) --out >(bzip2 -c > {output})"
 
@@ -338,6 +363,8 @@ rule merge_gtpro_counts_for_species:
             prefix_workdir("reads/{mgen}/gtpro/r2.snv_counts.tsv.bz2"),
             mgen=config["all_samples"],
         ),
+    benchmark:
+        prefix_benchmarkdir("species/{species}/gtpro/snv_counts.tsv.bz2")
     params:
         species=lambda w: w.species,
         args=expand(
@@ -361,6 +388,8 @@ rule load_metagenotype_from_merged_gtpro:
         prefix_workdir("species/{species}/sfacts/snv_counts.mgtp.nc"),
     input:
         prefix_workdir("species/{species}/gtpro/snv_counts.tsv.bz2"),
+    benchmark:
+        prefix_benchmarkdir("species/{species}/sfacts/snv_counts.mgtp.nc")
     shell:
         """
         sfacts load --gtpro-metagenotype {input} {output}
@@ -380,6 +409,10 @@ rule filter_metagenotype:
         cvrg=integer_wc,
     input:
         prefix_workdir("species/{species}/sfacts/{stem}.mgtp.nc"),
+    benchmark:
+        prefix_benchmarkdir(
+            "species/{species}/sfacts/{stem}.filt-poly{poly}-cvrg{cvrg}.mgtp.nc"
+        )
     params:
         poly=lambda w: float(w.poly) / 100,
         cvrg=lambda w: float(w.cvrg) / 100,
@@ -404,6 +437,10 @@ rule subset_metagenotype:
         ),
     input:
         prefix_workdir("species/{species}/sfacts/{stem}.mgtp.nc"),
+    benchmark:
+        prefix_benchmarkdir(
+            "species/{species}/sfacts/{stem}.ss-g{num_positions}-block{block_number}-seed{seed}.mgtp.nc"
+        )
     params:
         seed=lambda w: int(w.seed),
         num_positions=lambda w: int(w.num_positions),
@@ -431,6 +468,10 @@ rule fit_sfacts:
     input:
         mgen=prefix_workdir("species/{species}/sfacts/{stem}.mgtp.nc"),
         strategy=config["sfacts_strategy_path"],
+    benchmark:
+        prefix_benchmarkdir(
+            "species/{species}/sfacts/{stem}.sfacts-s{strain_exponent}-seed{seed}.sfacts-fit.nc"
+        )
     params:
         strain_exponent=lambda w: float(w.strain_exponent) / 100,
         seed=lambda w: int(w.seed),
@@ -454,6 +495,8 @@ rule export_sfacts_comm:
         "{stem}.strain_composition.tsv",
     input:
         "{stem}.sfacts-fit.nc",
+    benchmark:
+        prefix_benchmarkdir("{stem}.strain_composition.tsv")
     shell:
         """
         sfacts dump --community {output} {input}
@@ -468,6 +511,8 @@ rule identify_strain_samples:
         prefix_workdir(
             f"species/{{species}}/sfacts/snv_counts.{config['sfacts_infix']}.strain_composition.tsv"
         ),
+    benchmark:
+        prefix_benchmarkdir("species/{species}/spgc/strain_pure_samples.tsv")
     params:
         frac_thresh=0.95,
     shell:
@@ -483,6 +528,8 @@ rule write_species_genes_list:
         prefix_workdir("species/{species}/spgc/species_genes.list"),
     input:
         config["species_gene_path"],
+    benchmark:
+        prefix_benchmarkdir("species/{species}/spgc/species_genes.list")
     shell:
         """
         awk '$2=="{wildcards.species}" {{print $1}}' < {input} > {output}
@@ -501,6 +548,8 @@ rule run_spgc:
             "species/{species}/spgc/strain_pure_samples.tsv"
         ),
         species_genes=prefix_workdir("species/{species}/spgc/species_genes.list"),
+    benchmark:
+        prefix_benchmarkdir("species/{species}/spgc/spgc.results.nc")
     params:
         trim_frac_species_genes=0.15,
         species_free_thresh=1e-4,
@@ -526,6 +575,8 @@ rule dump_spgc_gene_content:
         prefix_workdir("species/{species}/spgc.gene.tsv"),
     input:
         spgc=prefix_workdir("species/{species}/spgc/spgc.results.nc"),
+    benchmark:
+        prefix_benchmarkdir("species/{species}/spgc.gene.tsv")
     shell:
         "spgc dump_genes {input} {output}"
 
@@ -536,6 +587,8 @@ rule dump_spgc_strain_stats:
         prefix_workdir("species/{species}/spgc.strain.tsv"),
     input:
         spgc=prefix_workdir("species/{species}/spgc/spgc.results.nc"),
+    benchmark:
+        prefix_benchmarkdir("species/{species}/spgc.strain.tsv")
     params:
         ambig_thresh=0.1,
     shell:

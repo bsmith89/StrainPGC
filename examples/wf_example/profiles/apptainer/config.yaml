@@ -3,4 +3,3 @@ notemp: true
 keep-going: true
 use-apptainer: true
 apptainer-args: "--bind $PWD/../.."
-configfile: "$PWD/config.yaml"
