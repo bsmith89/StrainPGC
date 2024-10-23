@@ -15,7 +15,7 @@ StrainPGC is a Python package. A Python version >=3.11 is recommended
 (although other versions may also work)
 StrainPGC can be installed directly from GitHub using pip:
 
-```
+```bash
 git clone https://github.com/bsmith89/StrainPGC StrainPGC
 cd StrainPGC
 pip install -e .  # Editable installation for development.
@@ -39,7 +39,7 @@ a small input dataset.
 
 From the root of the StrainPGC repository,
 
-```
+```bash
 cd examples/core_example
 ```
 
@@ -57,7 +57,7 @@ This includes three files:
 
 With correctly formatted input files, like those provided, the StrainPGC method can be run as follows:
 
-```
+```bash
 spgc run \
     pangenome_profile.depth.tsv.bz2 \
     species_genes.list \
@@ -73,7 +73,7 @@ This file can be parsed directly using the XArray library in Python.
 
 #### Step 3: Dump results to text files
 
-```
+```bash
 spgc dump_genes spgc.results.nc spgc.gene.tsv
 spgc dump_strains spgc.results.nc spgc.strain.tsv
 ```
@@ -85,7 +85,7 @@ The two output files are:
 
 Additional subcommands and options are described in the help:
 
-```
+```bash
 spgc --help
 spgc run --help
 ```
@@ -120,7 +120,7 @@ Alternatively you can install the necessary software directly to your system.
 
 From the root of the StrainPGC repository,
 
-```
+```bash
 cd examples/wf_example
 ```
 
@@ -131,14 +131,14 @@ Example input files for the workflow are provided for testing.
 These raw metagenomes and the necessary GT-Pro reference data can be downloaded
 using included scripts as follows:
 
-```
+```bash
 bash scripts/download_gtpro_refs.sh ref/gtpro
 bash scripts/download_example_reads.sh raw
 ```
 
 #### Step 3: Dry-Run / Pre-Check
 
-```
+```bash
 species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
 num_procs=12  # Number of CPU processes
 
@@ -151,7 +151,7 @@ snakemake --profile profiles/apptainer \
 
 #### Step 4: Actually Run the Snakemake Workflow
 
-```
+```bash
 species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
 num_procs=12  # Number of CPU processes
 
@@ -297,7 +297,7 @@ We used Snakemake to benchmark the resource utilization on our servers using the
 
 NOTE: After running the example workflow, benchmark results can be collected with the following BASH code.
 
-```
+```bash
 (
     printf 'step\ts\th:m:s\tmax_rss\tmax_vms\tmax_uss\tmax_pss\tio_in\tio_out\tmean_load\tcpu_time\n'
     find benchmark/ -type f | xargs -I% awk -v OFS='\t' -v file=% 'NR>1 {print file,$0}' %
@@ -342,7 +342,7 @@ root of the StrainPGC repository to `/src/StrainPGC` in that container.
 For instance, the example in the StrainPGC-wf quick-start
 can be run as follows:
 
-```
+```bash
 species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
 num_procs=12  # Number of CPU processes
 
@@ -362,7 +362,7 @@ in the Snakemake execution.
 
 ### Building the Docker Image
 
-```
+```bash
 docker build -t bsmith89/strainpgc-wf -t bsmith89/strainpgc-wf:latest -f workflow/envs/Dockerfile .
 docker run -it --rm -v $(pwd)/../..:$(pwd)/../.. bsmith89/strainpgc-wf:latest
 docker push bsmith89/strainpgc-wf
