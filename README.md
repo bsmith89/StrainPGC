@@ -293,7 +293,17 @@ The core StrainPGC tool is single-threaded and not computationally intensive: ~6
 However, the integrated workflow requires a substantial amount of storage,
 memory, and CPU time, in particular due to the requirements for MIDAS.
 
-We benchmarked resource utilization on our servers using the example described above.
+We used Snakemake to benchmark the resource utilization on our servers using the example described above.
+
+NOTE: After running the example workflow, benchmark results can be collected with the following BASH code.
+
+```
+(
+    printf 'step\ts\th:m:s\tmax_rss\tmax_vms\tmax_uss\tmax_pss\tio_in\tio_out\tmean_load\tcpu_time\n'
+    find benchmark/ -type f | xargs -I% awk -v OFS='\t' -v file=% 'NR>1 {print file,$0}' %
+) > benchmark.tsv`
+```
+
 To a first approximation, resource requirements include:
 
 - Disk (Between 160 and 200 GB)
