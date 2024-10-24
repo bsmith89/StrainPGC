@@ -143,8 +143,8 @@ species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
 num_procs=12  # Number of CPU processes
 
 snakemake --profile profiles/apptainer \
-        --dry-run \
         --configfile config.yaml \
+        --dry-run \
         "results/species/$species/spgc.strain.tsv" \
         "results/species/$species/spgc.gene.tsv"
 ```
@@ -156,8 +156,8 @@ species=102506  # MIDAS/UHGG/GT-Pro species ID for E. coli
 num_procs=12  # Number of CPU processes
 
 snakemake --profile profiles/apptainer \
-        -j "$num_procs" \
         --configfile config.yaml \
+        -j "$num_procs" \
         "results/species/$species/spgc.strain.tsv" \
         "results/species/$species/spgc.gene.tsv"
 ```
