@@ -531,12 +531,12 @@ rule write_species_genes_list:
     output:
         prefix_workdir("species/{species}/spgc/species_genes.list"),
     input:
-        config["species_gene_path"],
+        config["species_gene_tarball_path"],
     benchmark:
         prefix_benchmarkdir("species/{species}/spgc/species_genes.list")
     shell:
         """
-        awk '$2=="{wildcards.species}" {{print $1}}' < {input} > {output}
+        tar -Oxvf {input} midasdb_v2_centroid_75_marker_genes/{wildcards.species}.genes.list > {output}
         """
 
 

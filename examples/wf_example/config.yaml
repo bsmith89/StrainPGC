@@ -17,7 +17,7 @@ sample_manifest_path: 'sample.tsv'
 # List of species_ids for MIDAS profiling
 species_list_path: 'species.list'
 # Mapping from single-copy genes to their species_id
-species_gene_path: 'species_gene.tsv'
+species_gene_tarball_path: 'ref/midasdb_v2_centroid_75_marker_genes.tar.gz'
 # Path to illumina_adapters FASTA
 illumina_adapters_fasta_path: 'ref/illumina_adapters.fa'
 # Directory to use for MIDASDB managed by MIDAS.
