@@ -239,7 +239,7 @@ Applied to the [example data](https://github.com/bsmith89/StrainPGC#running-an-i
 this pipeline can be visualized as the following
 graph of dependencies:
 
-[![Workflow Graph](docs/workflow_graph.svg)](https://raw.githubusercontent.com/bsmith89/StrainPGC/refs/heads/main/docs/workflow_graph.svg)
+![Workflow Graph](examples/wf_example/filegraph.svg)
 
 #### SNP profiling
 

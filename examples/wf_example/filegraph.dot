@@ -1,25 +1,10 @@
 digraph snakemake_dag {
-    graph[bgcolor=white, margin=0, rankdir=LR];
+    graph[bgcolor=white, margin=0];
     node[shape=box, style=rounded, fontname=sans,                 fontsize=10, penwidth=2];
     edge[penwidth=2, color=grey];
-0 [ shape=none, margin=0, label=<<table border="2" color="#57D9B4" cellspacing="3" cellborder="0">
+0 [ shape=none, margin=0, label=<<table border="2" color="#D97C57" cellspacing="3" cellborder="0">
 <tr><td>
-<b><font point-size="18">all</font></b>
-</td></tr>
-<hr/>
-<tr><td align="left"> <b><font point-size="14">&#8618; input</font></b> </td></tr>
-<tr>
-<td align="left"><font face="monospace">results/species/102506/spgc.gene.tsv</font></td>
-</tr>
-<tr>
-<td align="left"><font face="monospace">results/species/102506/spgc.strain.tsv</font></td>
-</tr>
-<hr/>
-<tr><td align="right">  </td> </tr>
-</table>>]
-1 [ shape=none, margin=0, label=<<table border="2" color="#D95757" cellspacing="3" cellborder="0">
-<tr><td>
-<b><font point-size="18">dump_spgc_strain_stats</font></b>
+<b><font point-size="18">dump_spgc_gene_content</font></b>
 </td></tr>
 <hr/>
 <tr><td align="left"> <b><font point-size="14">&#8618; input</font></b> </td></tr>
@@ -29,9 +14,9 @@ digraph snakemake_dag {
 <hr/>
 <tr><td align="right"> <b><font point-size="14">output &rarr;</font></b> </td> </tr>
 <tr>
-<td align="left"><font face="monospace">results/species/{species}/spgc.strain.tsv</font></td></tr>
+<td align="left"><font face="monospace">results/species/{species}/spgc.gene.tsv</font></td></tr>
 </table>>]
-2 [ shape=none, margin=0, label=<<table border="2" color="#D9A157" cellspacing="3" cellborder="0">
+1 [ shape=none, margin=0, label=<<table border="2" color="#577CD9" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">run_spgc</font></b>
 </td></tr>
@@ -51,7 +36,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/spgc/spgc.results.nc</font></td></tr>
 </table>>]
-3 [ shape=none, margin=0, label=<<table border="2" color="#577CD9" cellspacing="3" cellborder="0">
+2 [ shape=none, margin=0, label=<<table border="2" color="#D98E57" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">merge_and_aggregate_pangenome_profiles</font></b>
 </td></tr>
@@ -86,7 +71,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/midas/pangenome_profile.depth.tsv.bz2</font></td></tr>
 </table>>]
-4 [ shape=none, margin=0, label=<<table border="2" color="#A1D957" cellspacing="3" cellborder="0">
+3 [ shape=none, margin=0, label=<<table border="2" color="#D9C657" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">midas_profile_genes</font></b>
 </td></tr>
@@ -100,7 +85,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/midas/pangenome_profile_raw.gene_mapping_tally.tsv.bz2</font></td></tr>
 </table>>]
-5 [ shape=none, margin=0, label=<<table border="2" color="#57D98E" cellspacing="3" cellborder="0">
+4 [ shape=none, margin=0, label=<<table border="2" color="#57B4D9" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">run_midas_genes_align_only</font></b>
 </td></tr>
@@ -123,7 +108,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/midas/pangenome_profile_raw.bam</font></td></tr>
 </table>>]
-6 [ shape=none, margin=0, label=<<table border="2" color="#7CD957" cellspacing="3" cellborder="0">
+5 [ shape=none, margin=0, label=<<table border="2" color="#B4D957" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">build_midas_pangenomes_bowtie_index</font></b>
 </td></tr>
@@ -140,7 +125,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/pangenomes.bt2.d</font></td></tr>
 </table>>]
-7 [ shape=none, margin=0, label=<<table border="2" color="#5769D9" cellspacing="3" cellborder="0">
+6 [ shape=none, margin=0, label=<<table border="2" color="#57D9A1" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">initialize_midasdb_for_species_list</font></b>
 </td></tr>
@@ -154,7 +139,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/midasdb_initialized.flag</font></td></tr>
 </table>>]
-8 [ shape=none, margin=0, label=<<table border="2" color="#D9D957" cellspacing="3" cellborder="0">
+7 [ shape=none, margin=0, label=<<table border="2" color="#8ED957" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">alias_preprocessed_reads</font></b>
 </td></tr>
@@ -168,7 +153,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/preprocess/{stem}.proc.fq.gz</font></td></tr>
 </table>>]
-9 [ shape=none, margin=0, label=<<table border="2" color="#B4D957" cellspacing="3" cellborder="0">
+8 [ shape=none, margin=0, label=<<table border="2" color="#69D957" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">quality_trim_reads</font></b>
 </td></tr>
@@ -189,7 +174,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/preprocess/r3{stem}qtrim.fq.gz</font></td></tr>
 </table>>]
-10 [ shape=none, margin=0, label=<<table border="2" color="#D9B457" cellspacing="3" cellborder="0">
+9 [ shape=none, margin=0, label=<<table border="2" color="#57A1D9" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">trim_adapters</font></b>
 </td></tr>
@@ -206,7 +191,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/preprocess/{stem}.deadapt.fq.gz</font></td></tr>
 </table>>]
-11 [ shape=none, margin=0, label=<<table border="2" color="#D97C57" cellspacing="3" cellborder="0">
+10 [ shape=none, margin=0, label=<<table border="2" color="#D96957" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">deduplicate_reads</font></b>
 </td></tr>
@@ -228,7 +213,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/preprocess/r2{stem}dedup.fq.gz</font></td></tr>
 </table>>]
-12 [ shape=none, margin=0, label=<<table border="2" color="#D9C657" cellspacing="3" cellborder="0">
+11 [ shape=none, margin=0, label=<<table border="2" color="#578ED9" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">symlink_input_reads</font></b>
 </td></tr>
@@ -247,7 +232,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/preprocess/r2.fq.gz</font></td></tr>
 </table>>]
-13 [ shape=none, margin=0, label=<<table border="2" color="#57D969" cellspacing="3" cellborder="0">
+12 [ shape=none, margin=0, label=<<table border="2" color="#57D9D9" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">symlink_midasdb_gene_metadata</font></b>
 </td></tr>
@@ -261,7 +246,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/midas/clusters_99_info.tsv</font></td></tr>
 </table>>]
-14 [ shape=none, margin=0, label=<<table border="2" color="#8ED957" cellspacing="3" cellborder="0">
+13 [ shape=none, margin=0, label=<<table border="2" color="#D9B457" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">identify_strain_samples</font></b>
 </td></tr>
@@ -275,7 +260,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/spgc/strain_pure_samples.tsv</font></td></tr>
 </table>>]
-15 [ shape=none, margin=0, label=<<table border="2" color="#57D97C" cellspacing="3" cellborder="0">
+14 [ shape=none, margin=0, label=<<table border="2" color="#57D9C6" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">export_sfacts_comm</font></b>
 </td></tr>
@@ -289,7 +274,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">{stem}.strain_composition.tsv</font></td></tr>
 </table>>]
-16 [ shape=none, margin=0, label=<<table border="2" color="#C6D957" cellspacing="3" cellborder="0">
+15 [ shape=none, margin=0, label=<<table border="2" color="#5769D9" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">fit_sfacts</font></b>
 </td></tr>
@@ -308,7 +293,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/sfacts/{stem}.sfacts-s{strain_exponent}-seed{seed}.sfacts-fit.nc</font></td></tr>
 </table>>]
-17 [ shape=none, margin=0, label=<<table border="2" color="#57D9A1" cellspacing="3" cellborder="0">
+16 [ shape=none, margin=0, label=<<table border="2" color="#D95757" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">subset_metagenotype</font></b>
 </td></tr>
@@ -322,7 +307,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/sfacts/{stem}.ss-g{num_positions}-block{block_number}-seed{seed}.mgtp.nc</font></td></tr>
 </table>>]
-18 [ shape=none, margin=0, label=<<table border="2" color="#57D9D9" cellspacing="3" cellborder="0">
+17 [ shape=none, margin=0, label=<<table border="2" color="#57D957" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">filter_metagenotype</font></b>
 </td></tr>
@@ -336,7 +321,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/sfacts/{stem}.filt-poly{poly,[0-9]+}-cvrg{cvrg,[0-9]+}.mgtp.nc</font></td></tr>
 </table>>]
-19 [ shape=none, margin=0, label=<<table border="2" color="#D98E57" cellspacing="3" cellborder="0">
+18 [ shape=none, margin=0, label=<<table border="2" color="#57D969" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">load_metagenotype_from_merged_gtpro</font></b>
 </td></tr>
@@ -350,7 +335,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/sfacts/snv_counts.mgtp.nc</font></td></tr>
 </table>>]
-20 [ shape=none, margin=0, label=<<table border="2" color="#57D9C6" cellspacing="3" cellborder="0">
+19 [ shape=none, margin=0, label=<<table border="2" color="#D9D957" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">merge_gtpro_counts_for_species</font></b>
 </td></tr>
@@ -400,7 +385,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/gtpro/snv_counts.tsv.bz2</font></td></tr>
 </table>>]
-21 [ shape=none, margin=0, label=<<table border="2" color="#69D957" cellspacing="3" cellborder="0">
+20 [ shape=none, margin=0, label=<<table border="2" color="#57D98E" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">gtpro_finish_processing_reads</font></b>
 </td></tr>
@@ -417,7 +402,7 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/gtpro/{r}.snv_counts.tsv.bz2</font></td></tr>
 </table>>]
-22 [ shape=none, margin=0, label=<<table border="2" color="#57D957" cellspacing="3" cellborder="0">
+21 [ shape=none, margin=0, label=<<table border="2" color="#57D9B4" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">run_gtpro</font></b>
 </td></tr>
@@ -434,23 +419,23 @@ digraph snakemake_dag {
 <tr>
 <td align="left"><font face="monospace">results/reads/{mgen}/gtpro/{r}.snv_counts_raw.gz</font></td></tr>
 </table>>]
-23 [ shape=none, margin=0, label=<<table border="2" color="#57B4D9" cellspacing="3" cellborder="0">
+22 [ shape=none, margin=0, label=<<table border="2" color="#D9A157" cellspacing="3" cellborder="0">
 <tr><td>
 <b><font point-size="18">write_species_genes_list</font></b>
 </td></tr>
 <hr/>
 <tr><td align="left"> <b><font point-size="14">&#8618; input</font></b> </td></tr>
 <tr>
-<td align="left"><font face="monospace">species_gene.tsv</font></td>
+<td align="left"><font face="monospace">ref/midasdb_v2_centroid_75_marker_genes.tar.gz</font></td>
 </tr>
 <hr/>
 <tr><td align="right"> <b><font point-size="14">output &rarr;</font></b> </td> </tr>
 <tr>
 <td align="left"><font face="monospace">results/species/{species}/spgc/species_genes.list</font></td></tr>
 </table>>]
-24 [ shape=none, margin=0, label=<<table border="2" color="#57A1D9" cellspacing="3" cellborder="0">
+23 [ shape=none, margin=0, label=<<table border="2" color="#57D97C" cellspacing="3" cellborder="0">
 <tr><td>
-<b><font point-size="18">dump_spgc_gene_content</font></b>
+<b><font point-size="18">dump_spgc_strain_stats</font></b>
 </td></tr>
 <hr/>
 <tr><td align="left"> <b><font point-size="14">&#8618; input</font></b> </td></tr>
@@ -460,25 +445,24 @@ digraph snakemake_dag {
 <hr/>
 <tr><td align="right"> <b><font point-size="14">output &rarr;</font></b> </td> </tr>
 <tr>
-<td align="left"><font face="monospace">results/species/{species}/spgc.gene.tsv</font></td></tr>
+<td align="left"><font face="monospace">results/species/{species}/spgc.strain.tsv</font></td></tr>
 </table>>]
 	1 -> 0
-	24 -> 0
+	22 -> 1
+	13 -> 1
 	2 -> 1
-	23 -> 2
 	3 -> 2
-	14 -> 2
-	13 -> 3
+	12 -> 2
 	4 -> 3
+	7 -> 4
 	5 -> 4
 	6 -> 5
-	8 -> 5
-	7 -> 6
+	8 -> 7
 	9 -> 8
 	10 -> 9
 	11 -> 10
-	12 -> 11
-	7 -> 13
+	6 -> 12
+	14 -> 13
 	15 -> 14
 	16 -> 15
 	17 -> 16
@@ -486,7 +470,6 @@ digraph snakemake_dag {
 	19 -> 18
 	20 -> 19
 	21 -> 20
-	22 -> 21
-	8 -> 22
-	2 -> 24
+	7 -> 21
+	1 -> 23
 }            
